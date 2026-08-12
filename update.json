@@ -1,0 +1,14 @@
+{
+  "announcement": {
+    "title": "欢迎使用夏乔乔工具箱",
+    "content": "1. 首个版本上线，包含素材水印工具。\n2. 支持黑白双色文字水印、描边、序号功能。\n3. 更多功能持续开发中，敬请期待！",
+    "enabled": true
+  },
+  "update": {
+    "versionCode": 2,
+    "versionName": "1.0.1",
+    "updateLog": "1. 优化水印拖拽体验\n2. 修复部分机型导出失败问题\n3. 新增应用内更新功能",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/app-release.apk",
+    "forceUpdate": false
+  }
+}

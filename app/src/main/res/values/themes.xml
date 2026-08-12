@@ -1,0 +1,21 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 应用主题 -->
+    <style name="Theme.XiaQiaoQiao" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="colorPrimaryVariant">@color/brand_primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/brand_accent</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:statusBarColor" tools:targetApi="l">@color/brand_primary_dark</item>
+        <item name="android:windowBackground">@color/bg_page</item>
+    </style>
+
+    <!-- 大号绿色按钮 -->
+    <style name="Widget.XiaQiaoQiao.Button.Primary" parent="Widget.MaterialComponents.Button">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="backgroundTint">@color/brand_primary</item>
+    </style>
+</resources>
