@@ -26,8 +26,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(BASE_DIR, "icon_source.jpg")
 RES_DIR = os.path.join(BASE_DIR, "app", "src", "main", "res")
 
-# 密度倍率
-DENSITIES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
+# 密度倍率（省略 mdpi：现代设备最低 hdpi，缺失时系统自动用 hdpi 缩放，可减小 APK 体积）
+DENSITIES = {"hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4.0}
 # 传统图标基准 48dp，自适应画布基准 108dp
 LEGACY_BASE_DP = 48
 ADAPTIVE_BASE_DP = 108
@@ -36,7 +36,11 @@ LEGACY_CONTENT_RATIO = 0.70
 
 
 def make_icon(dst_path, canvas_px, content_ratio, round_shape=False):
-    """把原图缩放居中放进透明画布并保存 PNG；round_shape=True 时内容裁成圆形"""
+    """把原图缩放居中放进透明画布并保存 PNG；round_shape=True 时内容裁成圆形。
+    保存前量化到 256 色以减小体积（jsDelivr 对超过 5MB 的文件会重定向到 raw，
+    国内无法直连 raw，APK 必须控制在 5MB 以内）。"""
+    from PIL import ImageDraw
+
     src = Image.open(SRC).convert("RGBA")
     canvas = Image.new("RGBA", (canvas_px, canvas_px), (0, 0, 0, 0))
     content_px = round(canvas_px * content_ratio)
@@ -45,14 +49,17 @@ def make_icon(dst_path, canvas_px, content_ratio, round_shape=False):
     if round_shape:
         # 圆形 alpha 蒙版：抗锯齿边缘
         mask = Image.new("L", (content_px, content_px), 0)
-        from PIL import ImageDraw
         ImageDraw.Draw(mask).ellipse((0, 0, content_px - 1, content_px - 1), fill=255)
         scaled.putalpha(mask)
 
     offset = (canvas_px - content_px) // 2
     canvas.paste(scaled, (offset, offset), scaled if round_shape else None)
-    canvas.save(dst_path, "PNG")
-    print("生成", os.path.relpath(dst_path, BASE_DIR), f"({canvas_px}x{canvas_px})")
+
+    # 量化到 256 色（带透明度），照片类图片视觉几乎无损，体积约减半
+    quantized = canvas.quantize(colors=256, method=Image.FASTOCTREE)
+    quantized.save(dst_path, "PNG", optimize=True)
+    print("生成", os.path.relpath(dst_path, BASE_DIR),
+          f"({canvas_px}x{canvas_px}, {os.path.getsize(dst_path) // 1024} KB)")
 
 
 def main():
