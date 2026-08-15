@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
@@ -11,6 +12,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -73,8 +75,8 @@ public class ApkDownloadHelper {
                     .putLong(KEY_DOWNLOAD_ID, downloadId)
                     .apply();
 
-            // 弹出下载进度对话框
-            showProgressDialog(context, dm, downloadId);
+            // 弹出下载进度对话框（带浏览器下载兜底按钮）
+            showProgressDialog(context, dm, downloadId, url);
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(context, R.string.update_download_fail, Toast.LENGTH_SHORT).show();
@@ -84,8 +86,10 @@ public class ApkDownloadHelper {
     /**
      * 显示下载进度对话框，并轮询 DownloadManager 更新进度。
      * 下载完成/失败后自动关闭，成功后由 ApkInstallReceiver 拉起安装界面。
+     * 对话框内提供"用浏览器下载"兜底按钮，自动下载慢或失败时可随时点。
      */
-    private static void showProgressDialog(Context context, DownloadManager dm, long downloadId) {
+    private static void showProgressDialog(Context context, DownloadManager dm, long downloadId,
+                                           String url) {
         // 只能用 Activity 上下文弹对话框；非 Activity 时退化为 Toast 提示
         if (!(context instanceof Activity) || ((Activity) context).isFinishing()) {
             Toast.makeText(context, R.string.update_downloading, Toast.LENGTH_SHORT).show();
@@ -95,6 +99,7 @@ public class ApkDownloadHelper {
         View view = LayoutInflater.from(context).inflate(R.layout.dialog_download_progress, null);
         ProgressBar progressBar = view.findViewById(R.id.progress_bar);
         TextView tvProgress = view.findViewById(R.id.tv_progress);
+        Button btnBrowser = view.findViewById(R.id.btn_browser_download);
 
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setTitle(R.string.update_downloading)
@@ -103,11 +108,29 @@ public class ApkDownloadHelper {
                 .create();
         dialog.show();
 
+        // 浏览器下载兜底：用系统浏览器打开 APK 直链，由用户在浏览器里完成下载
+        btnBrowser.setOnClickListener(v -> openBrowserDownload(context, url));
+
         // 主线程轮询下载进度
         Handler handler = new Handler(Looper.getMainLooper());
         ProgressPoller poller = new ProgressPoller(context, dm, downloadId,
                 dialog, progressBar, tvProgress, handler);
         handler.post(poller);
+    }
+
+    /**
+     * 用系统浏览器打开下载链接（兜底：部分网络只有浏览器能下载）。
+     */
+    private static void openBrowserDownload(Context context, String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(intent);
+            Toast.makeText(context, R.string.update_browser_opened, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(context, R.string.update_browser_fail, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
@@ -166,9 +189,12 @@ public class ApkDownloadHelper {
                         return; // 安装界面由 ApkInstallReceiver 拉起
                     }
                     if (status == DownloadManager.STATUS_FAILED) {
-                        dismissSafely();
-                        Toast.makeText(context, R.string.update_download_fail,
-                                Toast.LENGTH_SHORT).show();
+                        // 不直接关弹窗：提示改用浏览器下载，弹窗允许关闭返回
+                        tvProgress.setText(R.string.update_fail_browser);
+                        try {
+                            dialog.setCancelable(true);
+                        } catch (Exception ignored) {
+                        }
                         return;
                     }
 

@@ -25,4 +25,16 @@
         android:text="正在连接服务器…"
         android:textColor="@color/text_secondary"
         android:textSize="14sp" />
+
+    <!-- 浏览器下载兜底按钮：自动下载卡住/失败时点这里 -->
+    <Button
+        android:id="@+id/btn_browser_download"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:backgroundTint="@color/brand_accent"
+        android:minHeight="42dp"
+        android:text="@string/update_browser_download"
+        android:textColor="@color/black"
+        android:textSize="13sp" />
 </LinearLayout>

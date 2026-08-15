@@ -5,10 +5,10 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 8,
-    "versionName": "1.0.7",
-    "updateLog": "1. 返回首页改为图标按钮，顶栏去掉工具名文字，界面更简洁",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.7/app-release.apk",
+    "versionCode": 9,
+    "versionName": "1.0.8",
+    "updateLog": "1. 下载更新时新增“用浏览器下载”兜底按钮：下载慢或自动下载失败时，点一下即可用系统浏览器下载安装包",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.8/app-release.apk",
     "forceUpdate": false
   }
 }
