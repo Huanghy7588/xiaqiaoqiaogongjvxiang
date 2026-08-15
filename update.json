@@ -8,7 +8,7 @@
     "versionCode": 5,
     "versionName": "1.0.4",
     "updateLog": "1. 修复图标显示不完整的问题：不再截取图片局部，圆形桌面也不会裁到内容\n2. 优化应用图标视觉大小\n3. 修正多行水印配色：整块文字先全黑再复制一份全白",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/app-release.apk",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.4/app-release.apk",
     "forceUpdate": false
   }
 }
