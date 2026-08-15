@@ -92,6 +92,12 @@ public class WatermarkToolActivity extends AppCompatActivity {
     }
 
     private void initListeners() {
+        // 返回首页（结束本页回到主界面）
+        findViewById(R.id.btn_back_home).setOnClickListener(v -> finish());
+
+        // 主界面小图不允许拖拽水印，调整位置请进大图预览或用"位置调整"
+        watermarkView.setDragEnabled(false);
+
         // 文字输入
         etText.addTextChangedListener(new android.text.TextWatcher() {
             @Override
@@ -265,10 +271,13 @@ public class WatermarkToolActivity extends AppCompatActivity {
         Toast.makeText(this, "已将当前位置应用到所有图片", Toast.LENGTH_SHORT).show();
     }
 
-    /** 获取当前选中的默认位置模式（居中 / 左下角） */
+    /** 获取当前选中的水印位置模式（居中 / 左下角 / 右下角） */
     private int getSelectedPositionMode() {
         android.widget.RadioButton rbCenter = findViewById(R.id.rb_pos_center);
-        return rbCenter.isChecked() ? ImageData.POSITION_CENTER : ImageData.POSITION_BOTTOM_LEFT;
+        if (rbCenter.isChecked()) return ImageData.POSITION_CENTER;
+        android.widget.RadioButton rbBottomLeft = findViewById(R.id.rb_pos_bottom_left);
+        if (rbBottomLeft.isChecked()) return ImageData.POSITION_BOTTOM_LEFT;
+        return ImageData.POSITION_BOTTOM_RIGHT;
     }
 
     /** 打开大图预览 */

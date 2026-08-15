@@ -63,7 +63,8 @@ public class PreviewActivity extends AppCompatActivity {
             return;
         }
 
-        // 点击图片空白处关闭预览
+        // 点击图片空白处关闭预览；大图预览里允许拖拽水印
+        previewView.setDragEnabled(true);
         previewView.setOnTapListener(this::finish);
 
         Button btnPrev = findViewById(R.id.btn_prev);

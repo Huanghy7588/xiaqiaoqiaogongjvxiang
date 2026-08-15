@@ -5,10 +5,10 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 6,
-    "versionName": "1.0.5",
-    "updateLog": "1. 新增大图预览：点击预览图即可全屏查看，支持左右按钮切换图片\n2. 大图预览里可直接拖拽水印，调整位置更方便\n3. 水印默认位置新增可选：居中 / 左下角\n4. 修复文字过长吞字问题：超长文字自动缩小字号，完整显示在图上",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.5/app-release.apk",
+    "versionCode": 7,
+    "versionName": "1.0.6",
+    "updateLog": "1. 水印位置新增右下角选项（居中/左下角/右下角）\n2. 主界面小图不再误触移动水印，调整位置请进大图预览拖动或用位置调整按钮\n3. 检查更新更可靠：改用最新版本标签，不再受 CDN 分支缓存延迟影响",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.6/app-release.apk",
     "forceUpdate": false
   }
 }

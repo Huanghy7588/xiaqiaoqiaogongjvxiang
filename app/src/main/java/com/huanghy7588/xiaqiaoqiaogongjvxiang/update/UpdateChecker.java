@@ -41,16 +41,15 @@ public class UpdateChecker {
     // ==================== 配置 ====================
 
     /**
-     * 远程 JSON 地址（jsDelivr CDN，国内可访问）。
-     * 带时间戳参数防止 CDN 缓存，确保每次都拿最新 JSON。
-     *
-     * 使用方式：
-     * 1. 将 update.json 上传到 GitHub 仓库根目录。
-     * 2. jsDelivr 会自动镜像 GitHub 内容。
-     * 3. 修改 update.json 后，等待 CDN 缓存刷新（最长 12 小时）。
-     *    如需立即生效，访问 https://purge.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/update.json
+     * 远程 JSON 主地址（jsDelivr CDN，国内可访问）。
+     * 使用 @latest 解析到最新 tag——tag 解析是即时的，不像 @main 分支有最长 12 小时的缓存延迟。
+     * 前提：每次发版都要打 tag（v1.0.x），并把 update.json 提交到仓库根目录。
      */
     private static final String JSON_BASE_URL =
+            "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@latest/update.json";
+
+    /** 备用地址（@main 分支解析，可能滞后但作为兜底） */
+    private static final String JSON_FALLBACK_URL =
             "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/update.json";
 
     /** SharedPreferences 文件名 */
@@ -110,33 +109,36 @@ public class UpdateChecker {
 
         final boolean manual = isManual;
         new Thread(() -> {
-            try {
-                // 带时间戳防止 CDN 缓存
-                String url = JSON_BASE_URL + "?t=" + System.currentTimeMillis();
-                String json = fetchJson(url);
-                final UpdateModel model = UpdateModel.parse(json);
+            final UpdateModel model = fetchModelWithFallback();
 
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    checkingMap.remove(key);
-                    if (model == null) {
-                        if (manual) toast(activity, "检测失败，请检查网络");
-                        return;
-                    }
-                    if (activity.isFinishing() || activity.isDestroyed()) return;
-                    showAnnouncementThenUpdate(activity, model, manual);
-                });
+            new Handler(Looper.getMainLooper()).post(() -> {
+                checkingMap.remove(key);
+                if (model == null) {
+                    if (manual) toast(activity, "检测失败，请检查网络");
+                    return;
+                }
+                if (activity.isFinishing() || activity.isDestroyed()) return;
+                showAnnouncementThenUpdate(activity, model, manual);
+            });
+        }).start();
+    }
+
+    /**
+     * 依次尝试主地址（@latest）和备用地址（@main），带时间戳防 CDN 缓存。
+     * 任一地址拿到合法 JSON 即返回；全部失败返回 null。
+     */
+    private static UpdateModel fetchModelWithFallback() {
+        String[] bases = {JSON_BASE_URL, JSON_FALLBACK_URL};
+        for (String base : bases) {
+            try {
+                String url = base + "?t=" + System.currentTimeMillis();
+                UpdateModel model = UpdateModel.parse(fetchJson(url));
+                if (model != null) return model;
             } catch (Exception e) {
                 e.printStackTrace();
-                checkingMap.remove(key);
-                if (manual) {
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        if (!activity.isFinishing() && !activity.isDestroyed()) {
-                            toast(activity, "检测失败，请检查网络");
-                        }
-                    });
-                }
             }
-        }).start();
+        }
+        return null;
     }
 
     /** 先弹公告，关闭后再检测更新 */

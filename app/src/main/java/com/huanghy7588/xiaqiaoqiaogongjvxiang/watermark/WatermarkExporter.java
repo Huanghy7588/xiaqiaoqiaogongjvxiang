@@ -116,6 +116,10 @@ public class WatermarkExporter {
                 cx = margin + maxLineWidth / 2f;
                 cy = bmpH - margin - totalHeight / 2f;
                 break;
+            case ImageData.POSITION_BOTTOM_RIGHT:
+                cx = bmpW - margin - maxLineWidth / 2f;
+                cy = bmpH - margin - totalHeight / 2f;
+                break;
             case ImageData.POSITION_CUSTOM:
                 cx = bmpW * centerXFrac;
                 cy = bmpH * centerYFrac;

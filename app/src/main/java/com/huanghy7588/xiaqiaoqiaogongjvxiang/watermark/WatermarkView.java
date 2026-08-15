@@ -85,6 +85,9 @@ public class WatermarkView extends View {
     private long downTime;
     private int touchSlop;
 
+    /** 是否允许拖拽移动水印（主界面小图禁用，大图预览启用） */
+    private boolean dragEnabled = true;
+
     /** 点击监听（点击空白处触发，用于打开大图预览） */
     private Runnable onTapListener;
 
@@ -216,6 +219,11 @@ public class WatermarkView extends View {
     /** 设置点击空白处的监听（用于进入大图预览） */
     public void setOnTapListener(Runnable listener) {
         this.onTapListener = listener;
+    }
+
+    /** 设置是否允许拖拽水印（false 时触摸不移动水印，仅保留点击回调） */
+    public void setDragEnabled(boolean enabled) {
+        this.dragEnabled = enabled;
     }
 
     // ==================== 绘制 ====================
@@ -352,6 +360,11 @@ public class WatermarkView extends View {
                 cx = imageRect.left + margin + maxLineWidth / 2f;
                 cy = imageRect.bottom - margin - totalHeight / 2f;
                 break;
+            case ImageData.POSITION_BOTTOM_RIGHT:
+                // 右下角：文字块右边贴右边距、底边贴下边距，永远完整显示
+                cx = imageRect.right - margin - maxLineWidth / 2f;
+                cy = imageRect.bottom - margin - totalHeight / 2f;
+                break;
             case ImageData.POSITION_CUSTOM:
                 cx = imageRect.left + imageRect.width() * centerXFrac;
                 cy = imageRect.top + imageRect.height() * centerYFrac;
@@ -402,10 +415,10 @@ public class WatermarkView extends View {
                 downX = x;
                 downY = y;
                 downTime = System.currentTimeMillis();
-                // 判断是否按在水印区域（稍微放大命中范围）
+                // 判断是否按在水印区域（稍微放大命中范围）；拖拽被禁用时永不进入拖拽
                 RectF hitRect = new RectF(watermarkRect);
                 hitRect.inset(-40, -40);
-                isDragging = hitRect.contains(x, y);
+                isDragging = dragEnabled && hitRect.contains(x, y);
                 lastTouchX = x;
                 lastTouchY = y;
                 if (isDragging) {

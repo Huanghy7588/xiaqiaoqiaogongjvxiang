@@ -14,17 +14,18 @@
     <string name="wm_font_hint">默认使用系统字体</string>
     <string name="wm_stroke">描边</string>
     <string name="wm_numbering">序号</string>
-    <string name="wm_default_pos">默认位置</string>
+    <string name="wm_default_pos">水印位置</string>
     <string name="wm_pos_center">居中</string>
     <string name="wm_pos_bottom_left">左下角</string>
-    <string name="wm_preview_hint">点击上方预览图可进入大图预览并调整水印位置</string>
+    <string name="wm_pos_bottom_right">右下角</string>
+    <string name="wm_preview_hint">点击上方预览图进入大图预览，在预览中拖动即可调整水印位置</string>
     <string name="wm_apply_to_all">应用位置到所有图</string>
     <string name="wm_import_images">导入图片</string>
     <string name="wm_export">导出水印图</string>
     <string name="wm_prev">上一张</string>
     <string name="wm_next">下一张</string>
     <string name="wm_fine_tune">微调</string>
-    <string name="wm_fine_tune_pos">位置微调（十字方向盘）</string>
+    <string name="wm_fine_tune_pos">位置调整</string>
     <string name="wm_font_size">字体大小</string>
     <string name="wm_reset_pos">重置位置</string>
     <string name="wm_no_images">尚未导入图片</string>
@@ -42,6 +43,7 @@
     <string name="update_download_fail">下载失败，请稍后重试</string>
     <string name="confirm">确定</string>
     <string name="cancel">取消</string>
+    <string name="wm_back_home">返回首页</string>
 
     <!-- 更多页 -->
     <string name="more_check_update">检查更新</string>

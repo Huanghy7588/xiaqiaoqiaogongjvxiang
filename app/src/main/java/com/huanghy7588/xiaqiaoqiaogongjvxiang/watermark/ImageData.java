@@ -14,11 +14,13 @@ public class ImageData {
     public static final int POSITION_BOTTOM_LEFT = 1;
     /** 水印位置模式：自定义（用户拖拽或微调后自动切换） */
     public static final int POSITION_CUSTOM = 2;
+    /** 水印位置模式：右下角（文字自动贴右下，保证完整显示） */
+    public static final int POSITION_BOTTOM_RIGHT = 3;
 
     /** 图片 URI */
     public Uri uri;
 
-    /** 水印位置模式（居中 / 左下角 / 自定义） */
+    /** 水印位置模式（居中 / 左下角 / 右下角 / 自定义） */
     public int positionMode = POSITION_CENTER;
 
     /** 水印中心 X（占图片宽度比例 0~1，仅 CUSTOM 模式使用） */
