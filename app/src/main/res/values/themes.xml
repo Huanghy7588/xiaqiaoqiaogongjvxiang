@@ -25,4 +25,14 @@
         <item name="android:minHeight">56dp</item>
         <item name="backgroundTint">@color/brand_primary</item>
     </style>
+
+    <!-- 打赏弹窗主题：全屏 + 透明背景 -->
+    <style name="Theme.XiaQiaoQiao.DonateDialog" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowFullscreen">false</item>
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.6</item>
+    </style>
 </resources>

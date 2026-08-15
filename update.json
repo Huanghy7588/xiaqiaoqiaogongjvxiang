@@ -5,10 +5,10 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 9,
-    "versionName": "1.0.8",
-    "updateLog": "1. 下载更新时新增“用浏览器下载”兜底按钮：下载慢或自动下载失败时，点一下即可用系统浏览器下载安装包",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.8/app-release.apk",
+    "versionCode": 10,
+    "versionName": "1.0.9",
+    "updateLog": "1. 更多页新增投稿/优化联系方式：长按 QQ 号即可一键复制\n2. 新增打赏入口：点击「打赏一下」查看赞赏码，长按图片可保存到相册\n3. 检查更新下方增加联系方式提示，方便反馈建议",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.9/app-release.apk",
     "forceUpdate": false
   }
 }

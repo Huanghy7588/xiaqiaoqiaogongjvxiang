@@ -14,3 +14,14 @@ captures/
 
 # Logs
 *.log
+build-output*.log
+gradle-output.log
+
+# AI 助手工作目录（含本地记忆，不应上传）
+.workbuddy/
+
+# Debug APK（仅本地测试用，不入库）
+app-debug.apk
+
+# 构建输出
+app/build/
