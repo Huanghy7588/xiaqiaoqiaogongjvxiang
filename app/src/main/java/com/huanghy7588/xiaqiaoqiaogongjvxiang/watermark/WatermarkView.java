@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
  *
  * 功能：
  * 1. 以 fitCenter 方式绘制原图，透明底图片用棋盘格背景显示。
- * 2. 支持多行文字水印（回车换行），逐行黑白交替：第一行黑色，第二行白色……
+ * 2. 支持多行文字水印（回车换行）：整块文字先画一遍全黑，再复制一份画全白。
  * 3. 支持描边：黑字白边、白字黑边。
  * 4. 支持序号：在最后一行文字后追加数字（1、2、3…）。
  * 5. 支持拖拽移动水印位置，支持微调。
@@ -230,15 +230,19 @@ public class WatermarkView extends View {
                 Shader.TileMode.REPEAT, Shader.TileMode.REPEAT));
     }
 
-    /** 绘制多行水印文字：奇数行黑色、偶数行白色，逐行交替 */
+    /** 绘制多行水印文字：整块先画一遍全黑，再复制一份画全白 */
     private void drawWatermark(Canvas canvas) {
         if (watermarkText.isEmpty()) return;
 
         // 按换行符拆分为多行，序号追加到最后一行
-        String[] lines = watermarkText.split("\n");
-        if (numberingEnabled && lines.length > 0) {
-            lines[lines.length - 1] = lines[lines.length - 1] + currentNumber;
+        String[] srcLines = watermarkText.split("\n");
+        if (numberingEnabled && srcLines.length > 0) {
+            srcLines[srcLines.length - 1] = srcLines[srcLines.length - 1] + currentNumber;
         }
+
+        // 渲染总行数 = 源行数 × 2（前一半黑色，后一半白色）
+        int srcCount = srcLines.length;
+        int lineCount = srcCount * 2;
 
         // 文字大小 = 图片显示宽度 × 比例
         float textSize = imageRect.width() * textSizeFactor;
@@ -254,7 +258,6 @@ public class WatermarkView extends View {
 
         // 行间距与总高度
         float lineSpacing = textSize * 0.2f;
-        int lineCount = lines.length;
         float totalHeight = textSize * lineCount + lineSpacing * (lineCount - 1);
 
         // 水印中心点（像素坐标）
@@ -262,19 +265,20 @@ public class WatermarkView extends View {
         float cy = imageRect.top + imageRect.height() * centerYFrac;
         float top = cy - totalHeight / 2f;
 
-        // 逐行绘制：先描边再填充，保证填充在上
+        // 逐行绘制：i < srcCount 为黑色块，之后为白色块
         float maxLineWidth = 0f;
         for (int i = 0; i < lineCount; i++) {
             float baseline = top + textSize + i * (textSize + lineSpacing);
-            boolean isBlackLine = (i % 2 == 0);
+            boolean isBlackLine = (i < srcCount);
+            String line = srcLines[i % srcCount];
             Paint fillPaint = isBlackLine ? blackFillPaint : whiteFillPaint;
             Paint strokePaint = isBlackLine ? blackStrokePaint : whiteStrokePaint;
 
             if (strokeEnabled) {
-                canvas.drawText(lines[i], cx, baseline, strokePaint);
+                canvas.drawText(line, cx, baseline, strokePaint);
             }
-            canvas.drawText(lines[i], cx, baseline, fillPaint);
-            maxLineWidth = Math.max(maxLineWidth, fillPaint.measureText(lines[i]));
+            canvas.drawText(line, cx, baseline, fillPaint);
+            maxLineWidth = Math.max(maxLineWidth, fillPaint.measureText(line));
         }
 
         // 记录水印矩形用于命中检测

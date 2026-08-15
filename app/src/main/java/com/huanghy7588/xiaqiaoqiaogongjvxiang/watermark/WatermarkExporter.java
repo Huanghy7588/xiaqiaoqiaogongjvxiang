@@ -9,7 +9,7 @@ import android.graphics.Paint;
  * 水印导出器：在原始分辨率 Bitmap 上绘制水印。
  *
  * 绘制规则：
- * - 支持多行文字（按 \n 拆分），逐行黑白交替：奇数行黑色，偶数行白色。
+ * - 支持多行文字（按 \n 拆分）：整块先画一遍全黑，再复制一份画全白。
  * - 开启描边时：黑字白边、白字黑边。
  * - 开启序号时：最后一行文字末尾追加数字。
  * - 保留原图透明通道（透明底导出 PNG 时不丢失）。
@@ -67,10 +67,14 @@ public class WatermarkExporter {
         if (text == null || text.isEmpty()) return result;
 
         // 按换行符拆分为多行，序号追加到最后一行
-        String[] lines = text.split("\n");
-        if (numbering && lines.length > 0) {
-            lines[lines.length - 1] = lines[lines.length - 1] + number;
+        String[] srcLines = text.split("\n");
+        if (numbering && srcLines.length > 0) {
+            srcLines[srcLines.length - 1] = srcLines[srcLines.length - 1] + number;
         }
+
+        // 渲染总行数 = 源行数 × 2（前一半黑色，后一半白色），与预览保持一致
+        int srcCount = srcLines.length;
+        int lineCount = srcCount * 2;
 
         int bmpW = bitmap.getWidth();
         int bmpH = bitmap.getHeight();
@@ -86,24 +90,24 @@ public class WatermarkExporter {
         whiteStroke.setStrokeWidth(strokeWidth);
 
         float lineSpacing = textSize * 0.2f;
-        int lineCount = lines.length;
         float totalHeight = textSize * lineCount + lineSpacing * (lineCount - 1);
 
         float cx = bmpW * centerXFrac;
         float cy = bmpH * centerYFrac;
         float top = cy - totalHeight / 2f;
 
-        // 逐行绘制：奇数行黑色、偶数行白色，与预览保持一致
+        // 逐行绘制：i < srcCount 为黑色块，之后为白色块
         for (int i = 0; i < lineCount; i++) {
             float baseline = top + textSize + i * (textSize + lineSpacing);
-            boolean isBlackLine = (i % 2 == 0);
+            boolean isBlackLine = (i < srcCount);
+            String line = srcLines[i % srcCount];
             Paint fillPaint = isBlackLine ? blackFill : whiteFill;
             Paint strokePaint = isBlackLine ? blackStroke : whiteStroke;
 
             if (stroke) {
-                canvas.drawText(lines[i], cx, baseline, strokePaint);
+                canvas.drawText(line, cx, baseline, strokePaint);
             }
-            canvas.drawText(lines[i], cx, baseline, fillPaint);
+            canvas.drawText(line, cx, baseline, fillPaint);
         }
 
         return result;

@@ -5,9 +5,9 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 3,
-    "versionName": "1.0.2",
-    "updateLog": "新增下载进度弹窗：更新包下载时显示进度条、百分比和已下载大小",
+    "versionCode": 4,
+    "versionName": "1.0.3",
+    "updateLog": "1. 优化应用图标：补齐全部分辨率并调整视觉大小，不再显得过大\n2. 修正多行水印配色：整块文字先全黑再复制一份全白，不再逐行交替",
     "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/app-release.apk",
     "forceUpdate": false
   }
