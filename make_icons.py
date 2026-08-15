@@ -31,18 +31,26 @@ DENSITIES = {"mdpi": 1.0, "hdpi": 1.5, "xhdpi": 2.0, "xxhdpi": 3.0, "xxxhdpi": 4
 # 传统图标基准 48dp，自适应画布基准 108dp
 LEGACY_BASE_DP = 48
 ADAPTIVE_BASE_DP = 108
-# 传统图标内容占画布比例（四周留透明边）
-LEGACY_CONTENT_RATIO = 0.84
+# 传统图标内容占画布比例：70% 保证在圆形/圆角遮罩下也不被裁（对角线约 99%）
+LEGACY_CONTENT_RATIO = 0.70
 
 
-def make_icon(dst_path, canvas_px, content_ratio):
-    """把原图缩放居中放进透明画布并保存 PNG"""
+def make_icon(dst_path, canvas_px, content_ratio, round_shape=False):
+    """把原图缩放居中放进透明画布并保存 PNG；round_shape=True 时内容裁成圆形"""
     src = Image.open(SRC).convert("RGBA")
     canvas = Image.new("RGBA", (canvas_px, canvas_px), (0, 0, 0, 0))
     content_px = round(canvas_px * content_ratio)
     scaled = src.resize((content_px, content_px), Image.LANCZOS)
+
+    if round_shape:
+        # 圆形 alpha 蒙版：抗锯齿边缘
+        mask = Image.new("L", (content_px, content_px), 0)
+        from PIL import ImageDraw
+        ImageDraw.Draw(mask).ellipse((0, 0, content_px - 1, content_px - 1), fill=255)
+        scaled.putalpha(mask)
+
     offset = (canvas_px - content_px) // 2
-    canvas.paste(scaled, (offset, offset))
+    canvas.paste(scaled, (offset, offset), scaled if round_shape else None)
     canvas.save(dst_path, "PNG")
     print("生成", os.path.relpath(dst_path, BASE_DIR), f"({canvas_px}x{canvas_px})")
 
@@ -56,8 +64,10 @@ def main():
         os.makedirs(folder, exist_ok=True)
 
         legacy_px = round(LEGACY_BASE_DP * scale)
+        # 方版：内容 70% 居中（方形/圆角桌面通用）；圆版：内容裁成圆形
         make_icon(os.path.join(folder, "ic_launcher.png"), legacy_px, LEGACY_CONTENT_RATIO)
-        make_icon(os.path.join(folder, "ic_launcher_round.png"), legacy_px, LEGACY_CONTENT_RATIO)
+        make_icon(os.path.join(folder, "ic_launcher_round.png"), legacy_px,
+                  LEGACY_CONTENT_RATIO, round_shape=True)
 
         adaptive_px = round(ADAPTIVE_BASE_DP * scale)
         make_icon(os.path.join(folder, "ic_launcher_fg.png"), adaptive_px, 1.0)
