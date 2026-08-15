@@ -5,10 +5,10 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 5,
-    "versionName": "1.0.4",
-    "updateLog": "1. 修复图标显示不完整的问题：不再截取图片局部，圆形桌面也不会裁到内容\n2. 优化应用图标视觉大小\n3. 修正多行水印配色：整块文字先全黑再复制一份全白",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.4/app-release.apk",
+    "versionCode": 6,
+    "versionName": "1.0.5",
+    "updateLog": "1. 新增大图预览：点击预览图即可全屏查看，支持左右按钮切换图片\n2. 大图预览里可直接拖拽水印，调整位置更方便\n3. 水印默认位置新增可选：居中 / 左下角\n4. 修复文字过长吞字问题：超长文字自动缩小字号，完整显示在图上",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.5/app-release.apk",
     "forceUpdate": false
   }
 }

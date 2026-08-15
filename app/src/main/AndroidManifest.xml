@@ -45,6 +45,13 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XiaQiaoQiao" />
 
+        <!-- 大图预览：全屏黑底 -->
+        <activity
+            android:name=".watermark.PreviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao.Preview" />
+
         <!-- FileProvider：用于 Android 7.0+ 安全共享 APK 文件给系统安装器 -->
         <provider
             android:name="androidx.core.content.FileProvider"

@@ -58,8 +58,12 @@ public class WatermarkToolActivity extends AppCompatActivity {
             new ActivityResultContracts.GetMultipleContents(),
             uris -> {
                 if (uris != null && !uris.isEmpty()) {
+                    int defaultMode = getSelectedPositionMode();
                     for (Uri uri : uris) {
-                        imageList.add(new ImageData(uri));
+                        ImageData data = new ImageData(uri);
+                        // 新导入的图使用当前选中的默认位置模式
+                        data.positionMode = defaultMode;
+                        imageList.add(data);
                     }
                     currentIndex = imageList.size() - uris.size();
                     showCurrentImage();
@@ -105,6 +109,14 @@ public class WatermarkToolActivity extends AppCompatActivity {
         // 描边开关
         swStroke.setOnCheckedChangeListener((button, checked) ->
                 watermarkView.setStrokeEnabled(checked));
+
+        // 默认位置切换（居中 / 左下角）
+        android.widget.RadioGroup rgPosition = findViewById(R.id.rg_position);
+        rgPosition.setOnCheckedChangeListener((group, checkedId) ->
+                watermarkView.setPositionMode(getSelectedPositionMode()));
+
+        // 点击预览图空白处进入大图预览
+        watermarkView.setOnTapListener(this::openLargePreview);
 
         // 序号开关
         swNumbering.setOnCheckedChangeListener((button, checked) ->
@@ -161,7 +173,8 @@ public class WatermarkToolActivity extends AppCompatActivity {
         currentBitmap = loadSampledBitmap(data.uri, 1080);
         if (currentBitmap != null) {
             watermarkView.setImageBitmap(currentBitmap);
-            // 应用该图保存的位置
+            // 应用该图保存的位置模式和位置
+            watermarkView.setPositionMode(data.positionMode);
             watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
             watermarkView.setTextSizeFactor(data.textSizeFactor);
             watermarkView.setCurrentNumber(currentIndex + 1);
@@ -203,18 +216,26 @@ public class WatermarkToolActivity extends AppCompatActivity {
     private void saveCurrentPosition() {
         if (imageList.isEmpty()) return;
         ImageData data = imageList.get(currentIndex);
-        data.centerXFrac = watermarkView.getCenterXFrac();
-        data.centerYFrac = watermarkView.getCenterYFrac();
+        data.positionMode = watermarkView.getPositionMode();
+        data.centerXFrac = watermarkView.getActualCenterXFrac();
+        data.centerYFrac = watermarkView.getActualCenterYFrac();
         data.textSizeFactor = watermarkView.getTextSizeFactor();
     }
 
     // ==================== 微调操作 ====================
 
-    /** 微调位置 */
+    /** 微调位置（切换为自定义模式，以当前实际位置为基准，不跳变） */
     private void moveBy(float dxFrac, float dyFrac) {
-        float x = watermarkView.getCenterXFrac() + dxFrac;
-        float y = watermarkView.getCenterYFrac() + dyFrac;
-        watermarkView.setPositionFraction(x, y);
+        float x, y;
+        if (watermarkView.getPositionMode() == ImageData.POSITION_CUSTOM) {
+            x = watermarkView.getCenterXFrac() + dxFrac;
+            y = watermarkView.getCenterYFrac() + dyFrac;
+        } else {
+            // 居中/左下角模式下以当前实际显示位置为基准
+            x = watermarkView.getActualCenterXFrac() + dxFrac;
+            y = watermarkView.getActualCenterYFrac() + dyFrac;
+        }
+        watermarkView.setPositionFraction(x, y, true);
     }
 
     /** 微调大小 */
@@ -222,24 +243,61 @@ public class WatermarkToolActivity extends AppCompatActivity {
         watermarkView.setTextSizeFactor(watermarkView.getTextSizeFactor() + delta);
     }
 
-    /** 重置位置到右下角默认值 */
+    /** 重置位置到当前选中的默认模式 */
     private void resetPosition() {
-        watermarkView.setPositionFraction(0.82f, 0.88f);
+        watermarkView.setPositionMode(getSelectedPositionMode());
         watermarkView.setTextSizeFactor(0.06f);
     }
 
     /** 将当前图的水印位置应用到所有图 */
     private void applyPositionToAll() {
         if (imageList.isEmpty()) return;
-        float x = watermarkView.getCenterXFrac();
-        float y = watermarkView.getCenterYFrac();
+        int mode = watermarkView.getPositionMode();
+        float x = watermarkView.getActualCenterXFrac();
+        float y = watermarkView.getActualCenterYFrac();
         float size = watermarkView.getTextSizeFactor();
         for (ImageData data : imageList) {
+            data.positionMode = mode;
             data.centerXFrac = x;
             data.centerYFrac = y;
             data.textSizeFactor = size;
         }
         Toast.makeText(this, "已将当前位置应用到所有图片", Toast.LENGTH_SHORT).show();
+    }
+
+    /** 获取当前选中的默认位置模式（居中 / 左下角） */
+    private int getSelectedPositionMode() {
+        android.widget.RadioButton rbCenter = findViewById(R.id.rb_pos_center);
+        return rbCenter.isChecked() ? ImageData.POSITION_CENTER : ImageData.POSITION_BOTTOM_LEFT;
+    }
+
+    /** 打开大图预览 */
+    private void openLargePreview() {
+        if (imageList.isEmpty()) return;
+        saveCurrentPosition();
+        PreviewActivity.sharedImages = imageList;
+        PreviewActivity.sharedIndex = currentIndex;
+        PreviewActivity.sharedText = etText.getText().toString();
+        PreviewActivity.sharedStroke = swStroke.isChecked();
+        PreviewActivity.sharedNumbering = swNumbering.isChecked();
+        startActivity(new android.content.Intent(this, PreviewActivity.class));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // 从大图预览返回时，同步预览里拖拽过的位置（仅打开过预览才处理）
+        if (PreviewActivity.sharedUsed && !imageList.isEmpty() && currentBitmap != null) {
+            if (PreviewActivity.sharedIndex >= 0
+                    && PreviewActivity.sharedIndex < imageList.size()) {
+                currentIndex = PreviewActivity.sharedIndex;
+            }
+            ImageData data = imageList.get(currentIndex);
+            watermarkView.setPositionMode(data.positionMode);
+            watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
+            watermarkView.setTextSizeFactor(data.textSizeFactor);
+            updateIndexText();
+        }
     }
 
     // ==================== 导出 ====================
@@ -313,7 +371,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
         // 使用临时 WatermarkView 逻辑绘制水印到原图
         WatermarkExporter exporter = new WatermarkExporter();
         Bitmap result = exporter.export(fullBitmap, text, stroke, numbering, number,
-                data.centerXFrac, data.centerYFrac, data.textSizeFactor);
+                data.positionMode, data.centerXFrac, data.centerYFrac, data.textSizeFactor);
         fullBitmap.recycle();
 
         if (result == null) return false;

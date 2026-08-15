@@ -14,6 +14,10 @@
     <string name="wm_font_hint">默认使用系统字体</string>
     <string name="wm_stroke">描边</string>
     <string name="wm_numbering">序号</string>
+    <string name="wm_default_pos">默认位置</string>
+    <string name="wm_pos_center">居中</string>
+    <string name="wm_pos_bottom_left">左下角</string>
+    <string name="wm_preview_hint">点击上方预览图可进入大图预览并调整水印位置</string>
     <string name="wm_apply_to_all">应用位置到所有图</string>
     <string name="wm_import_images">导入图片</string>
     <string name="wm_export">导出水印图</string>

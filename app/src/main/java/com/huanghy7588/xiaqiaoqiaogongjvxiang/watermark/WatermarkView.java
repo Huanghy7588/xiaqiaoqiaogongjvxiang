@@ -12,6 +12,7 @@ import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.ViewParent;
 
 import androidx.annotation.Nullable;
@@ -25,7 +26,9 @@ import androidx.annotation.Nullable;
  * 3. 支持描边：黑字白边、白字黑边。
  * 4. 支持序号：在最后一行文字后追加数字（1、2、3…）。
  * 5. 支持拖拽移动水印位置，支持微调。
- * 6. 水印位置以"图片显示区域的百分比"存储，便于跨图批量应用。
+ * 6. 水印位置模式：居中 / 左下角 / 自定义。
+ * 7. 自动缩放字号：文字过长时自动缩小，保证完整显示在图片内（防吞字）。
+ * 8. 点击空白处（非水印区域）回调，用于进入大图预览。
  */
 public class WatermarkView extends View {
 
@@ -44,15 +47,23 @@ public class WatermarkView extends View {
     /** 当前序号 */
     private int currentNumber = 1;
 
+    /** 水印位置模式（居中 / 左下角 / 自定义） */
+    private int positionMode = ImageData.POSITION_CENTER;
+
     /**
-     * 水印中心位置（以图片显示区域宽高的百分比表示，0~1）。
-     * 默认右下角偏内：(0.82, 0.88)
+     * 水印中心位置（以图片显示区域宽高的百分比表示，0~1，仅 CUSTOM 模式使用）。
      */
-    private float centerXFrac = 0.82f;
-    private float centerYFrac = 0.88f;
+    private float centerXFrac = 0.5f;
+    private float centerYFrac = 0.5f;
 
     /** 文字大小占图片显示区域宽度的比例 */
     private float textSizeFactor = 0.06f;
+
+    /** 内容边距占图片宽度的比例（左右下留白，保证文字不被裁切） */
+    private static final float MARGIN_FRAC = 0.04f;
+
+    /** 文字最大可占用宽度/高度的比例（自动缩放保证完整显示） */
+    private static final float MAX_FILL = 0.92f;
 
     /** 图片在 View 中的实际显示矩形 */
     private final RectF imageRect = new RectF();
@@ -70,6 +81,12 @@ public class WatermarkView extends View {
     // 拖拽状态
     private boolean isDragging = false;
     private float lastTouchX, lastTouchY;
+    private float downX, downY;
+    private long downTime;
+    private int touchSlop;
+
+    /** 点击监听（点击空白处触发，用于打开大图预览） */
+    private Runnable onTapListener;
 
     // 水印测量矩形（用于命中检测）
     private final RectF watermarkRect = new RectF();
@@ -87,6 +104,7 @@ public class WatermarkView extends View {
 
     public WatermarkView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+        touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
         initPaints();
     }
 
@@ -141,10 +159,28 @@ public class WatermarkView extends View {
         invalidate();
     }
 
-    /** 设置水印位置（百分比 0~1） */
+    /** 设置水印位置模式（居中 / 左下角 / 自定义） */
+    public void setPositionMode(int mode) {
+        this.positionMode = mode;
+        invalidate();
+    }
+
+    public int getPositionMode() {
+        return positionMode;
+    }
+
+    /** 设置水印位置（百分比 0~1，自动切换为自定义模式） */
     public void setPositionFraction(float xFrac, float yFrac) {
         this.centerXFrac = clamp(xFrac, 0.05f, 0.95f);
         this.centerYFrac = clamp(yFrac, 0.05f, 0.95f);
+        invalidate();
+    }
+
+    /** 设置水印位置（百分比 0~1），可指定是否切换为自定义模式 */
+    public void setPositionFraction(float xFrac, float yFrac, boolean asCustom) {
+        this.centerXFrac = clamp(xFrac, 0.05f, 0.95f);
+        this.centerYFrac = clamp(yFrac, 0.05f, 0.95f);
+        if (asCustom) this.positionMode = ImageData.POSITION_CUSTOM;
         invalidate();
     }
 
@@ -156,6 +192,17 @@ public class WatermarkView extends View {
         return centerYFrac;
     }
 
+    /** 获取最近一次实际绘制的水印中心（百分比坐标），用于模式切换时保持位置不跳变 */
+    public float getActualCenterXFrac() {
+        if (imageRect.width() <= 0) return centerXFrac;
+        return clamp((watermarkRect.centerX() - imageRect.left) / imageRect.width(), 0.05f, 0.95f);
+    }
+
+    public float getActualCenterYFrac() {
+        if (imageRect.height() <= 0) return centerYFrac;
+        return clamp((watermarkRect.centerY() - imageRect.top) / imageRect.height(), 0.05f, 0.95f);
+    }
+
     public float getTextSizeFactor() {
         return textSizeFactor;
     }
@@ -164,6 +211,11 @@ public class WatermarkView extends View {
     public void setTextSizeFactor(float factor) {
         this.textSizeFactor = clamp(factor, 0.03f, 0.15f);
         invalidate();
+    }
+
+    /** 设置点击空白处的监听（用于进入大图预览） */
+    public void setOnTapListener(Runnable listener) {
+        this.onTapListener = listener;
     }
 
     // ==================== 绘制 ====================
@@ -230,6 +282,30 @@ public class WatermarkView extends View {
                 Shader.TileMode.REPEAT, Shader.TileMode.REPEAT));
     }
 
+    /**
+     * 计算自适应后的文字大小。
+     * 文字过长时按比例缩小，保证最宽行和总高度都落在图片区域内（防吞字）。
+     */
+    private float fitTextSize(String[] lines, float baseSize, float areaW, float areaH,
+                              int lineCount) {
+        blackFillPaint.setTextSize(baseSize);
+        float maxWidth = 0f;
+        for (String line : lines) {
+            maxWidth = Math.max(maxWidth, blackFillPaint.measureText(line));
+        }
+        float lineSpacing = baseSize * 0.2f;
+        float totalHeight = baseSize * lineCount + lineSpacing * (lineCount - 1);
+
+        float scale = 1f;
+        if (maxWidth > areaW * MAX_FILL && maxWidth > 0) {
+            scale = Math.min(scale, (areaW * MAX_FILL) / maxWidth);
+        }
+        if (totalHeight > areaH * MAX_FILL && totalHeight > 0) {
+            scale = Math.min(scale, (areaH * MAX_FILL) / totalHeight);
+        }
+        return baseSize * scale;
+    }
+
     /** 绘制多行水印文字：整块先画一遍全黑，再复制一份画全白 */
     private void drawWatermark(Canvas canvas) {
         if (watermarkText.isEmpty()) return;
@@ -244,8 +320,9 @@ public class WatermarkView extends View {
         int srcCount = srcLines.length;
         int lineCount = srcCount * 2;
 
-        // 文字大小 = 图片显示宽度 × 比例
-        float textSize = imageRect.width() * textSizeFactor;
+        // 文字大小 = 图片显示宽度 × 比例，超长自动缩小保证完整显示
+        float textSize = fitTextSize(srcLines, imageRect.width() * textSizeFactor,
+                imageRect.width(), imageRect.height(), lineCount);
         blackFillPaint.setTextSize(textSize);
         whiteFillPaint.setTextSize(textSize);
         blackStrokePaint.setTextSize(textSize);
@@ -260,13 +337,34 @@ public class WatermarkView extends View {
         float lineSpacing = textSize * 0.2f;
         float totalHeight = textSize * lineCount + lineSpacing * (lineCount - 1);
 
-        // 水印中心点（像素坐标）
-        float cx = imageRect.left + imageRect.width() * centerXFrac;
-        float cy = imageRect.top + imageRect.height() * centerYFrac;
+        // 最宽行宽度（用于命中矩形和左下角定位）
+        float maxLineWidth = 0f;
+        for (String line : srcLines) {
+            maxLineWidth = Math.max(maxLineWidth, blackFillPaint.measureText(line));
+        }
+
+        // 按位置模式计算水印中心点（像素坐标）
+        float cx, cy;
+        float margin = imageRect.width() * MARGIN_FRAC;
+        switch (positionMode) {
+            case ImageData.POSITION_BOTTOM_LEFT:
+                // 左下角：文字块左边贴左边距、底边贴下边距，永远完整显示
+                cx = imageRect.left + margin + maxLineWidth / 2f;
+                cy = imageRect.bottom - margin - totalHeight / 2f;
+                break;
+            case ImageData.POSITION_CUSTOM:
+                cx = imageRect.left + imageRect.width() * centerXFrac;
+                cy = imageRect.top + imageRect.height() * centerYFrac;
+                break;
+            case ImageData.POSITION_CENTER:
+            default:
+                cx = imageRect.centerX();
+                cy = imageRect.centerY();
+                break;
+        }
         float top = cy - totalHeight / 2f;
 
         // 逐行绘制：i < srcCount 为黑色块，之后为白色块
-        float maxLineWidth = 0f;
         for (int i = 0; i < lineCount; i++) {
             float baseline = top + textSize + i * (textSize + lineSpacing);
             boolean isBlackLine = (i < srcCount);
@@ -278,7 +376,6 @@ public class WatermarkView extends View {
                 canvas.drawText(line, cx, baseline, strokePaint);
             }
             canvas.drawText(line, cx, baseline, fillPaint);
-            maxLineWidth = Math.max(maxLineWidth, fillPaint.measureText(line));
         }
 
         // 记录水印矩形用于命中检测
@@ -302,24 +399,36 @@ public class WatermarkView extends View {
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
+                downX = x;
+                downY = y;
+                downTime = System.currentTimeMillis();
                 // 判断是否按在水印区域（稍微放大命中范围）
                 RectF hitRect = new RectF(watermarkRect);
                 hitRect.inset(-40, -40);
-                if (hitRect.contains(x, y)) {
-                    isDragging = true;
-                    lastTouchX = x;
-                    lastTouchY = y;
+                isDragging = hitRect.contains(x, y);
+                lastTouchX = x;
+                lastTouchY = y;
+                if (isDragging) {
                     // 禁止父 View 拦截触摸事件
                     ViewParent parent = getParent();
                     if (parent != null) {
                         parent.requestDisallowInterceptTouchEvent(true);
                     }
-                    return true;
                 }
-                break;
+                return true;
 
             case MotionEvent.ACTION_MOVE:
                 if (isDragging) {
+                    // 首次拖动时从当前位置模式切换为自定义（以当前实际中心为基准，避免跳变）
+                    if (positionMode != ImageData.POSITION_CUSTOM) {
+                        centerXFrac = clamp(
+                                (watermarkRect.centerX() - imageRect.left) / imageRect.width(),
+                                0.05f, 0.95f);
+                        centerYFrac = clamp(
+                                (watermarkRect.centerY() - imageRect.top) / imageRect.height(),
+                                0.05f, 0.95f);
+                        positionMode = ImageData.POSITION_CUSTOM;
+                    }
                     float dx = x - lastTouchX;
                     float dy = y - lastTouchY;
                     // 转换为百分比位移
@@ -330,12 +439,19 @@ public class WatermarkView extends View {
                     lastTouchX = x;
                     lastTouchY = y;
                     invalidate();
-                    return true;
                 }
-                break;
+                return true;
 
             case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
+                // 未拖动且未点在水印上 → 视为点击空白，触发大图预览
+                if (!isDragging
+                        && Math.abs(x - downX) < touchSlop
+                        && Math.abs(y - downY) < touchSlop
+                        && System.currentTimeMillis() - downTime < 400) {
+                    if (onTapListener != null) {
+                        onTapListener.run();
+                    }
+                }
                 isDragging = false;
                 // 恢复父 View 拦截
                 ViewParent p = getParent();
@@ -343,7 +459,16 @@ public class WatermarkView extends View {
                     p.requestDisallowInterceptTouchEvent(false);
                 }
                 invalidate();
-                break;
+                return true;
+
+            case MotionEvent.ACTION_CANCEL:
+                isDragging = false;
+                ViewParent pc = getParent();
+                if (pc != null) {
+                    pc.requestDisallowInterceptTouchEvent(false);
+                }
+                invalidate();
+                return true;
         }
         return super.onTouchEvent(event);
     }
