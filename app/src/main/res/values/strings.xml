@@ -10,7 +10,7 @@
     <string name="tool_watermark_desc">给图片添加黑白双色文字水印</string>
 
     <!-- 水印工具 -->
-    <string name="wm_input_hint">请输入水印文字</string>
+    <string name="wm_input_hint">请输入水印文字，按回车键可换行</string>
     <string name="wm_font_hint">默认使用系统字体</string>
     <string name="wm_stroke">描边</string>
     <string name="wm_numbering">序号</string>
@@ -20,6 +20,8 @@
     <string name="wm_prev">上一张</string>
     <string name="wm_next">下一张</string>
     <string name="wm_fine_tune">微调</string>
+    <string name="wm_fine_tune_pos">位置微调（十字方向盘）</string>
+    <string name="wm_font_size">字体大小</string>
     <string name="wm_reset_pos">重置位置</string>
     <string name="wm_no_images">尚未导入图片</string>
     <string name="wm_index_info">第 %1$d / %2$d 张</string>

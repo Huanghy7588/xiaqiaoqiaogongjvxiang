@@ -2,11 +2,13 @@ package com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Shader;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -18,10 +20,10 @@ import androidx.annotation.Nullable;
  * 水印预览自定义 View。
  *
  * 功能：
- * 1. 以 fitCenter 方式绘制原图。
- * 2. 在图片上叠加两行文字水印：第一行黑色，第二行白色。
+ * 1. 以 fitCenter 方式绘制原图，透明底图片用棋盘格背景显示。
+ * 2. 支持多行文字水印（回车换行），逐行黑白交替：第一行黑色，第二行白色……
  * 3. 支持描边：黑字白边、白字黑边。
- * 4. 支持序号：在文字后追加数字（1、2、3…）。
+ * 4. 支持序号：在最后一行文字后追加数字（1、2、3…）。
  * 5. 支持拖拽移动水印位置，支持微调。
  * 6. 水印位置以"图片显示区域的百分比"存储，便于跨图批量应用。
  */
@@ -61,6 +63,9 @@ public class WatermarkView extends View {
     private final Paint blackStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint whiteStrokePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint hintPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+    /** 透明底棋盘格画笔（懒加载，需要 density） */
+    private Paint checkerPaint;
 
     // 拖拽状态
     private boolean isDragging = false;
@@ -193,23 +198,46 @@ public class WatermarkView extends View {
         super.onDraw(canvas);
         if (imageBitmap == null) return;
 
-        // 1. 绘制原图
+        // 1. 先铺棋盘格底，透明底图片不会被误认为黑底
+        if (checkerPaint == null) initCheckerPaint();
         computeImageRect();
+        canvas.drawRect(imageRect, checkerPaint);
+
+        // 2. 绘制原图
         srcRect.set(0, 0, imageBitmap.getWidth(), imageBitmap.getHeight());
         canvas.drawBitmap(imageBitmap, srcRect, imageRect, null);
 
-        // 2. 绘制水印
+        // 3. 绘制水印
         drawWatermark(canvas);
     }
 
-    /** 绘制两行水印文字 */
+    /** 初始化透明底棋盘格画笔 */
+    private void initCheckerPaint() {
+        // 每格 10dp
+        int tile = Math.max(8, Math.round(getResources().getDisplayMetrics().density * 10));
+        Bitmap tileBmp = Bitmap.createBitmap(tile * 2, tile * 2, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(tileBmp);
+        Paint light = new Paint();
+        light.setColor(Color.rgb(245, 245, 245));
+        Paint dark = new Paint();
+        dark.setColor(Color.rgb(205, 205, 205));
+        c.drawRect(0, 0, tile * 2, tile * 2, light);
+        c.drawRect(0, 0, tile, tile, dark);
+        c.drawRect(tile, tile, tile * 2, tile * 2, dark);
+
+        checkerPaint = new Paint();
+        checkerPaint.setShader(new BitmapShader(tileBmp,
+                Shader.TileMode.REPEAT, Shader.TileMode.REPEAT));
+    }
+
+    /** 绘制多行水印文字：奇数行黑色、偶数行白色，逐行交替 */
     private void drawWatermark(Canvas canvas) {
         if (watermarkText.isEmpty()) return;
 
-        // 拼接序号
-        String displayText = watermarkText;
-        if (numberingEnabled) {
-            displayText = watermarkText + currentNumber;
+        // 按换行符拆分为多行，序号追加到最后一行
+        String[] lines = watermarkText.split("\n");
+        if (numberingEnabled && lines.length > 0) {
+            lines[lines.length - 1] = lines[lines.length - 1] + currentNumber;
         }
 
         // 文字大小 = 图片显示宽度 × 比例
@@ -224,33 +252,34 @@ public class WatermarkView extends View {
         blackStrokePaint.setStrokeWidth(strokeWidth);
         whiteStrokePaint.setStrokeWidth(strokeWidth);
 
-        // 行间距
+        // 行间距与总高度
         float lineSpacing = textSize * 0.2f;
-        float totalHeight = textSize * 2 + lineSpacing;
+        int lineCount = lines.length;
+        float totalHeight = textSize * lineCount + lineSpacing * (lineCount - 1);
 
         // 水印中心点（像素坐标）
         float cx = imageRect.left + imageRect.width() * centerXFrac;
         float cy = imageRect.top + imageRect.height() * centerYFrac;
+        float top = cy - totalHeight / 2f;
 
-        // 第一行（黑色）baseline
-        float baseline1 = cy - totalHeight / 2f + textSize;
-        // 第二行（白色）baseline
-        float baseline2 = baseline1 + lineSpacing + textSize;
+        // 逐行绘制：先描边再填充，保证填充在上
+        float maxLineWidth = 0f;
+        for (int i = 0; i < lineCount; i++) {
+            float baseline = top + textSize + i * (textSize + lineSpacing);
+            boolean isBlackLine = (i % 2 == 0);
+            Paint fillPaint = isBlackLine ? blackFillPaint : whiteFillPaint;
+            Paint strokePaint = isBlackLine ? blackStrokePaint : whiteStrokePaint;
 
-        // 先画描边再画填充，保证填充在上
-        if (strokeEnabled) {
-            canvas.drawText(displayText, cx, baseline1, blackStrokePaint);
-            canvas.drawText(displayText, cx, baseline2, whiteStrokePaint);
+            if (strokeEnabled) {
+                canvas.drawText(lines[i], cx, baseline, strokePaint);
+            }
+            canvas.drawText(lines[i], cx, baseline, fillPaint);
+            maxLineWidth = Math.max(maxLineWidth, fillPaint.measureText(lines[i]));
         }
-        canvas.drawText(displayText, cx, baseline1, blackFillPaint);
-        canvas.drawText(displayText, cx, baseline2, whiteFillPaint);
 
         // 记录水印矩形用于命中检测
-        Paint.FontMetrics fm = blackFillPaint.getFontMetrics();
-        float textWidth = blackFillPaint.measureText(displayText);
-        float halfW = textWidth / 2f;
-        float halfH = totalHeight / 2f;
-        watermarkRect.set(cx - halfW, cy - halfH, cx + halfW, cy + halfH);
+        watermarkRect.set(cx - maxLineWidth / 2f, top,
+                cx + maxLineWidth / 2f, top + totalHeight);
 
         // 拖拽时显示半透明边框
         if (isDragging) {

@@ -9,19 +9,29 @@ android {
 
     defaultConfig {
         applicationId "com.huanghy7588.xiaqiaoqiaogongjvxiang"
-        minSdk 24
+        minSdk 21
         targetSdk 34
         // 版本号：每次发版递增，远程 JSON 里的 versionCode 需大于此值才会触发更新
-        versionCode 1
-        versionName "1.0.0"
+        versionCode 2
+        versionName "1.0.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        release {
+            // 复用调试密钥签名，minSdk 21 时 Gradle 会自动启用 v1+v2 双签名，兼容 Android 5.0+
+            storeFile file("C:/Users/小米/.android/debug.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
     compileOptions {

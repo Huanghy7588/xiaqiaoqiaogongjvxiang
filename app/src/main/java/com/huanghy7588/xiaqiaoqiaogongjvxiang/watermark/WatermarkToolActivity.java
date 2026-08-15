@@ -53,20 +53,15 @@ public class WatermarkToolActivity extends AppCompatActivity {
     /** 当前预览用 Bitmap */
     private Bitmap currentBitmap;
 
-    /** 图片选择器 */
-    private final ActivityResultLauncher<String[]> imagePicker = registerForActivityResult(
-            new ActivityResultContracts.OpenMultipleDocuments(),
+    /** 图片选择器（GetMultipleContents：走系统相册/文件选择器，兼容多数机型多选） */
+    private final ActivityResultLauncher<String> imagePicker = registerForActivityResult(
+            new ActivityResultContracts.GetMultipleContents(),
             uris -> {
                 if (uris != null && !uris.isEmpty()) {
                     for (Uri uri : uris) {
-                        try {
-                            getContentResolver().takePersistableUriPermission(
-                                    uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        } catch (SecurityException ignored) {
-                        }
                         imageList.add(new ImageData(uri));
                     }
-                    currentIndex = 0;
+                    currentIndex = imageList.size() - uris.size();
                     showCurrentImage();
                     Toast.makeText(this, "已导入 " + uris.size() + " 张图片",
                             Toast.LENGTH_SHORT).show();
@@ -135,7 +130,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
 
         // 导入图片
         findViewById(R.id.btn_import).setOnClickListener(v ->
-                imagePicker.launch(new String[]{"image/*"}));
+                imagePicker.launch("image/*"));
 
         // 导出
         findViewById(R.id.btn_export).setOnClickListener(v -> exportImages());
@@ -312,6 +307,9 @@ public class WatermarkToolActivity extends AppCompatActivity {
         Bitmap fullBitmap = loadSampledBitmap(data.uri, 4096);
         if (fullBitmap == null) return false;
 
+        // 透明底图片必须导出 PNG（JPEG 不支持透明，会变黑底）
+        boolean hasAlpha = fullBitmap.hasAlpha();
+
         // 使用临时 WatermarkView 逻辑绘制水印到原图
         WatermarkExporter exporter = new WatermarkExporter();
         Bitmap result = exporter.export(fullBitmap, text, stroke, numbering, number,
@@ -321,19 +319,21 @@ public class WatermarkToolActivity extends AppCompatActivity {
         if (result == null) return false;
 
         // 保存到相册
-        boolean saved = saveToGallery(result);
+        boolean saved = saveToGallery(result, hasAlpha);
         result.recycle();
         return saved;
     }
 
-    /** 保存 Bitmap 到相册 Pictures/夏乔乔工具箱 */
-    private boolean saveToGallery(Bitmap bitmap) {
+    /** 保存 Bitmap 到相册 Pictures/夏乔乔工具箱，hasAlpha 为 true 时保存 PNG 保留透明 */
+    private boolean saveToGallery(Bitmap bitmap, boolean hasAlpha) {
         OutputStream os = null;
         try {
+            String ext = hasAlpha ? ".png" : ".jpg";
             ContentValues values = new ContentValues();
             values.put(MediaStore.Images.Media.DISPLAY_NAME,
-                    "watermark_" + System.currentTimeMillis() + ".jpg");
-            values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+                    "watermark_" + System.currentTimeMillis() + ext);
+            values.put(MediaStore.Images.Media.MIME_TYPE,
+                    hasAlpha ? "image/png" : "image/jpeg");
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/夏乔乔工具箱");
                 values.put(MediaStore.Images.Media.IS_PENDING, 1);
@@ -345,7 +345,11 @@ public class WatermarkToolActivity extends AppCompatActivity {
 
             os = resolver.openOutputStream(uri);
             if (os == null) return false;
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 95, os);
+            if (hasAlpha) {
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, os);
+            } else {
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 95, os);
+            }
             os.close();
             os = null;
 
