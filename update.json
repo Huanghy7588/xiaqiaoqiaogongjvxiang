@@ -5,9 +5,9 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 2,
-    "versionName": "1.0.1",
-    "updateLog": "1. 支持图片多选导入\n2. 透明底图片不再变黑（预览显示棋盘格，导出自动保存为 PNG）\n3. 文字水印支持回车换行，逐行黑白交替\n4. 微调按钮改为十字方向盘布局，字体大小按钮独立放置",
+    "versionCode": 3,
+    "versionName": "1.0.2",
+    "updateLog": "新增下载进度弹窗：更新包下载时显示进度条、百分比和已下载大小",
     "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/app-release.apk",
     "forceUpdate": false
   }

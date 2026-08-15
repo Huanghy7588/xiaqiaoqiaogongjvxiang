@@ -1,10 +1,18 @@
 package com.huanghy7588.xiaqiaoqiaogongjvxiang.update;
 
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.DownloadManager;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
@@ -15,6 +23,7 @@ import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
  * 使用系统 DownloadManager 下载 APK：
  * - 存储到公共 Download 目录，文件名 app-release.apk。
  * - 下载 ID 保存到 SharedPreferences，供 ApkInstallReceiver 比对。
+ * - 下载过程中弹出进度对话框（进度条 + 百分比 + 已下载大小）。
  * - 下载完成后由系统发送广播，Receiver 负责弹出安装界面。
  */
 public class ApkDownloadHelper {
@@ -25,6 +34,8 @@ public class ApkDownloadHelper {
     private static final String KEY_DOWNLOAD_ID = "download_id";
     /** APK 文件名 */
     public static final String APK_FILE_NAME = "app-release.apk";
+    /** 进度轮询间隔（毫秒） */
+    private static final long POLL_INTERVAL_MS = 300;
 
     /**
      * 启动 APK 下载。
@@ -62,11 +73,142 @@ public class ApkDownloadHelper {
                     .putLong(KEY_DOWNLOAD_ID, downloadId)
                     .apply();
 
-            Toast.makeText(context, R.string.update_downloading, Toast.LENGTH_SHORT).show();
+            // 弹出下载进度对话框
+            showProgressDialog(context, dm, downloadId);
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(context, R.string.update_download_fail, Toast.LENGTH_SHORT).show();
         }
+    }
+
+    /**
+     * 显示下载进度对话框，并轮询 DownloadManager 更新进度。
+     * 下载完成/失败后自动关闭，成功后由 ApkInstallReceiver 拉起安装界面。
+     */
+    private static void showProgressDialog(Context context, DownloadManager dm, long downloadId) {
+        // 只能用 Activity 上下文弹对话框；非 Activity 时退化为 Toast 提示
+        if (!(context instanceof Activity) || ((Activity) context).isFinishing()) {
+            Toast.makeText(context, R.string.update_downloading, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        View view = LayoutInflater.from(context).inflate(R.layout.dialog_download_progress, null);
+        ProgressBar progressBar = view.findViewById(R.id.progress_bar);
+        TextView tvProgress = view.findViewById(R.id.tv_progress);
+
+        AlertDialog dialog = new AlertDialog.Builder(context)
+                .setTitle(R.string.update_downloading)
+                .setView(view)
+                .setCancelable(false)
+                .create();
+        dialog.show();
+
+        // 主线程轮询下载进度
+        Handler handler = new Handler(Looper.getMainLooper());
+        ProgressPoller poller = new ProgressPoller(context, dm, downloadId,
+                dialog, progressBar, tvProgress, handler);
+        handler.post(poller);
+    }
+
+    /**
+     * 进度轮询任务。
+     * 每 POLL_INTERVAL_MS 查询一次 DownloadManager：
+     * - 运行中/排队/暂停：刷新进度条与文字，继续轮询。
+     * - 成功：关闭弹窗，停止轮询（安装界面由广播接收器拉起）。
+     * - 失败：关闭弹窗并提示，停止轮询。
+     */
+    private static class ProgressPoller implements Runnable {
+        private final Context context;
+        private final DownloadManager dm;
+        private final long downloadId;
+        private final AlertDialog dialog;
+        private final ProgressBar progressBar;
+        private final TextView tvProgress;
+        private final Handler handler;
+
+        ProgressPoller(Context context, DownloadManager dm, long downloadId,
+                       AlertDialog dialog, ProgressBar progressBar,
+                       TextView tvProgress, Handler handler) {
+            this.context = context;
+            this.dm = dm;
+            this.downloadId = downloadId;
+            this.dialog = dialog;
+            this.progressBar = progressBar;
+            this.tvProgress = tvProgress;
+            this.handler = handler;
+        }
+
+        @Override
+        public void run() {
+            // Activity 已销毁则直接关闭弹窗停止轮询（下载仍在系统后台继续）
+            if (context instanceof Activity && ((Activity) context).isFinishing()) {
+                dismissSafely();
+                return;
+            }
+
+            DownloadManager.Query query = new DownloadManager.Query();
+            query.setFilterById(downloadId);
+            Cursor cursor = null;
+            try {
+                cursor = dm.query(query);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int status = cursor.getInt(cursor.getColumnIndexOrThrow(
+                            DownloadManager.COLUMN_STATUS));
+                    long soFar = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
+                    long total = cursor.getLong(cursor.getColumnIndexOrThrow(
+                            DownloadManager.COLUMN_TOTAL_SIZE_BYTES));
+
+                    if (status == DownloadManager.STATUS_SUCCESSFUL) {
+                        progressBar.setProgress(100);
+                        tvProgress.setText("下载完成");
+                        dismissSafely();
+                        return; // 安装界面由 ApkInstallReceiver 拉起
+                    }
+                    if (status == DownloadManager.STATUS_FAILED) {
+                        dismissSafely();
+                        Toast.makeText(context, R.string.update_download_fail,
+                                Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    // 运行中 / 排队 / 暂停：刷新进度显示
+                    if (total > 0) {
+                        int percent = (int) (soFar * 100 / total);
+                        progressBar.setIndeterminate(false);
+                        progressBar.setProgress(percent);
+                        tvProgress.setText(percent + "%（" + formatSize(soFar)
+                                + " / " + formatSize(total) + "）");
+                    } else {
+                        // 总大小未知（服务器未返回 Content-Length）：显示已下载大小
+                        progressBar.setIndeterminate(true);
+                        tvProgress.setText("已下载 " + formatSize(soFar));
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (cursor != null) cursor.close();
+            }
+
+            // 继续下一轮轮询
+            handler.postDelayed(this, POLL_INTERVAL_MS);
+        }
+
+        /** 安全关闭弹窗（可能已随 Activity 销毁） */
+        private void dismissSafely() {
+            try {
+                if (dialog.isShowing()) dialog.dismiss();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /** 把字节数格式化为可读字符串（如 1.2 MB） */
+    private static String formatSize(long bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
+        return String.format("%.1f MB", bytes / 1024.0 / 1024.0);
     }
 
     /**
