@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 无中生有表格预览弹窗：全屏黑底 + 可缩放表格图 + 底部操作按钮 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.ZoomImageView
+        android:id="@+id/zoom_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal"
+        android:layout_marginTop="16dp"
+        android:background="#66000000"
+        android:paddingStart="14dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="14dp"
+        android:paddingBottom="6dp"
+        android:text="表格预览（双指缩放、拖动查看）"
+        android:textColor="@android:color/white"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <Button
+            android:id="@+id/btn_preview_save"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:backgroundTint="@color/brand_primary"
+            android:text="保存到相册"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btn_preview_close"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:backgroundTint="#616161"
+            android:text="关闭"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+</FrameLayout>

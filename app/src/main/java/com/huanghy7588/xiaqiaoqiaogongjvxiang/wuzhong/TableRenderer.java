@@ -10,7 +10,10 @@ import android.graphics.Rect;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 表格渲染器：把多个人物渲染成固定宽 2500 的 PNG（行=字段，列=人物）。
@@ -22,7 +25,7 @@ public class TableRenderer {
     private static final int LABEL_W = 560;         // 项目列宽
     private static final int HEADER_H = 120;        // 表头高
     private static final int TEXT_ROW_H = 140;      // 纯文字行高
-    private static final int MAX_IMG_H = 280;       // 图片最大高度
+    private static final int MAX_IMG_H = 420;       // 图片最大高度（放大保证看得清）
     private static final int PAD = 16;             // 单元格内边距
 
     private final Context ctx;
@@ -46,23 +49,40 @@ public class TableRenderer {
         pBlack.setColor(Color.BLACK);
     }
 
-    public Bitmap render(List<PersonData> persons, int mode, PersonData.OptionalState opt) {
+    public Bitmap render(List<PersonData> persons, int mode) {
         if (persons == null || persons.isEmpty()) return null;
 
         int n = persons.size();
         int personW = (IMG_W - LABEL_W) / n;
 
-        // 取表头标签（以第一人为准）
-        List<PersonData.Row> first = persons.get(0).computeRows(mode, opt);
-        int rowCount = first.size();
+        // 每人的行转成 label -> cell 映射（选填项每人独立，需按行标签对齐）
+        List<Map<String, PersonData.Cell>> maps = new ArrayList<>();
+        for (PersonData p : persons) {
+            Map<String, PersonData.Cell> m = new LinkedHashMap<>();
+            for (PersonData.Row r : p.computeRows(mode)) m.put(r.label, r.cell);
+            maps.add(m);
+        }
+
+        // 统一行序列：主行（所有人一致，取第一人）+ 选填并集（任一人勾选即保留该行）
+        List<String> labels = new ArrayList<>();
+        for (PersonData.Row r : persons.get(0).computeRows(mode)) {
+            if (!isOptionalLabel(r.label)) labels.add(r.label);
+        }
+        for (String ol : PersonData.OPTIONAL_LABELS) {
+            for (Map<String, PersonData.Cell> m : maps) {
+                if (m.containsKey(ol)) { labels.add(ol); break; }
+            }
+        }
+        int rowCount = labels.size();
 
         // 计算每行高度（图片行需更大）
         int[] rowH = new int[rowCount];
         for (int r = 0; r < rowCount; r++) {
             int h = TEXT_ROW_H;
+            String label = labels.get(r);
             for (int i = 0; i < n; i++) {
-                PersonData.Cell c = persons.get(i).computeRows(mode, opt).get(r).cell;
-                if (c.imageAsset != null) {
+                PersonData.Cell c = maps.get(i).get(label);
+                if (c != null && c.imageAsset != null) {
                     Size sz = imgSize(c.imageAsset);
                     if (sz != null) {
                         float tw = personW - PAD * 2;
@@ -99,14 +119,15 @@ public class TableRenderer {
         int y = HEADER_H;
         for (int r = 0; r < rowCount; r++) {
             int h = rowH[r];
+            String label = labels.get(r);
             // 标签列
             cv.drawRect(0, y, LABEL_W, y + h, pLabelBg);
-            drawCellText(cv, first.get(r).label, 0, y, LABEL_W, h, 38, false);
+            drawCellText(cv, label, 0, y, LABEL_W, h, 38, false);
             // 竖向分隔线
             cv.drawLine(LABEL_W, y, LABEL_W, y + h, pLine);
             // 人物列
             for (int i = 0; i < n; i++) {
-                PersonData.Cell c = persons.get(i).computeRows(mode, opt).get(r).cell;
+                PersonData.Cell c = maps.get(i).get(label);
                 int cx = LABEL_W + i * personW;
                 drawCell(cv, c, cx, y, personW, h);
                 cv.drawLine(cx + personW, y, cx + personW, y + h, pLine);
@@ -118,6 +139,13 @@ public class TableRenderer {
         // 外边框
         cv.drawRect(1, 1, IMG_W - 1, totalH - 1, pLine);
         return bmp;
+    }
+
+    private boolean isOptionalLabel(String label) {
+        for (String ol : PersonData.OPTIONAL_LABELS) {
+            if (ol.equals(label)) return true;
+        }
+        return false;
     }
 
     private void drawCell(Canvas cv, PersonData.Cell c, int x, int y, int w, int h) {

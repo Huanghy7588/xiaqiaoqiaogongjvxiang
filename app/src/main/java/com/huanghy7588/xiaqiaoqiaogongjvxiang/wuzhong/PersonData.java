@@ -72,7 +72,9 @@ public class PersonData {
     public int laneTier = -1; // 0 对抗..4 射手
     public int laneTierImage = -1; // Role Tier 图片索引
 
-    /** 选填项（全局，4 项） */
+    /** 选填项（每个人物独立一份） */
+    public final OptionalState opt = new OptionalState();
+
     public static class OptionalState {
         public boolean memoryStone; // 需要铭记之石
         public boolean heroSign;    // 需要英雄签名
@@ -108,8 +110,11 @@ public class PersonData {
         return (v >= 0 && v < arr.length) ? arr[v] : "";
     }
 
-    /** 计算该人物在指定模式下的表格行（含选填项） */
-    public List<Row> computeRows(int mode, OptionalState opt) {
+    /** 选填项标签（固定顺序，供渲染器做行并集） */
+    public static final String[] OPTIONAL_LABELS = {"铭记之石", "英雄签名", "职业标", "全国标"};
+
+    /** 计算该人物在指定模式下的表格行（含选填项，选填项按勾选状态显示） */
+    public List<Row> computeRows(int mode) {
         List<Row> rows = new ArrayList<>();
 
         // ①
@@ -199,13 +204,11 @@ public class PersonData {
             }
         }
 
-        // 选填项（最底部）
-        if (opt != null) {
-            if (opt.memoryStone) rows.add(new Row("铭记之石", new Cell("需要铭记之石", null)));
-            if (opt.heroSign) rows.add(new Row("英雄签名", new Cell("需要英雄签名", null)));
-            if (opt.profBadge) rows.add(new Row("职业标", new Cell("需要职业标", null)));
-            if (opt.nationalBadge) rows.add(new Row("全国标", new Cell("需要全国标", null)));
-        }
+        // 选填项（最底部，勾选了才显示）
+        if (opt.memoryStone) rows.add(new Row("铭记之石", new Cell("需要铭记之石", null)));
+        if (opt.heroSign) rows.add(new Row("英雄签名", new Cell("需要英雄签名", null)));
+        if (opt.profBadge) rows.add(new Row("职业标", new Cell("需要职业标", null)));
+        if (opt.nationalBadge) rows.add(new Row("全国标", new Cell("需要全国标", null)));
 
         return rows;
     }
