@@ -6,9 +6,9 @@
   },
   "update": {
     "versionCode": 12,
-    "versionName": "1.0.11",
-    "updateLog": "1. 优化版本更新检测：增加 raw.githubusercontent 终极兜底源与失败重试，旧版本更稳更快收到更新\n2. 去掉无效的缓存绕行参数，改用 @latest 的 tag 即时解析\n3. 更新弹窗新增「当前版本 → 最新版本」对比提示",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.11/app-release.apk",
+    "versionName": "1.1.0",
+    "updateLog": "1. 优化版本更新检测：增加 raw.githubusercontent 终极兜底源与失败重试，旧版本更稳更快收到更新\n2. 去掉无效的缓存绕行参数，改用 @latest 的 tag 即时解析\n3. 更新弹窗新增「当前版本 → 最新版本」对比提示\n4. 版本号规范：补丁号不再使用两位数，1.0.9 之后直接到 1.1.0",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.0/app-release.apk",
     "forceUpdate": false
   }
 }
