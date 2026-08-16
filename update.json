@@ -5,10 +5,10 @@
     "enabled": true
   },
   "update": {
-    "versionCode": 10,
-    "versionName": "1.0.9",
-    "updateLog": "1. 更多页新增投稿/优化联系方式：长按 QQ 号即可一键复制\n2. 新增打赏入口：点击「打赏一下」查看赞赏码，长按图片可保存到相册\n3. 检查更新下方增加联系方式提示，方便反馈建议",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.9/app-release.apk",
+    "versionCode": 11,
+    "versionName": "1.0.10",
+    "updateLog": "1. 首页新增「无中生有表格」工具：王者资料一键生成专属表格\n2. 支持排位/娱乐两种模式，必填项含蓝红方、英雄皮肤、熟练度/标、框、贵族标、亲密关系、召唤师技能、加载进度、分路\n3. 选填项支持铭记之石/英雄签名/职业标/全国标\n4. 可添加多个人物（左一/左二…），导出固定宽 2500 的表格 PNG 到相册",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.0.10/app-release.apk",
     "forceUpdate": false
   }
 }

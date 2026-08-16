@@ -45,6 +45,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XiaQiaoQiao" />
 
+        <activity
+            android:name=".wuzhong.WuzhongTableActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
         <!-- 大图预览：全屏黑底 -->
         <activity
             android:name=".watermark.PreviewActivity"

@@ -12,8 +12,8 @@ android {
         minSdk 21
         targetSdk 34
         // 版本号：每次发版递增，远程 JSON 里的 versionCode 需大于此值才会触发更新
-        versionCode 10
-        versionName "1.0.9"
+        versionCode 11
+        versionName "1.0.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

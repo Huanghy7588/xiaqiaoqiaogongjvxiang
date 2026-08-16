@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.WuzhongTableActivity;
 
 /**
  * 首页 Fragment：展示功能入口列表。
@@ -29,6 +30,13 @@ public class HomeFragment extends Fragment {
         View watermarkCard = root.findViewById(R.id.card_watermark);
         watermarkCard.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), WatermarkToolActivity.class);
+            startActivity(intent);
+        });
+
+        // 点击无中生有表格工具卡片
+        View wuzhongCard = root.findViewById(R.id.card_wuzhong);
+        wuzhongCard.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), WuzhongTableActivity.class);
             startActivity(intent);
         });
 

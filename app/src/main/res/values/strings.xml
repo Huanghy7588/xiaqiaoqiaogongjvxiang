@@ -8,6 +8,8 @@
     <!-- 首页功能 -->
     <string name="tool_watermark">素材水印工具</string>
     <string name="tool_watermark_desc">给图片添加黑白双色文字水印</string>
+    <string name="tool_wuzhong">无中生有表格</string>
+    <string name="tool_wuzhong_desc">王者资料一键生成专属表格，导出到相册</string>
 
     <!-- 水印工具 -->
     <string name="wm_input_hint">请输入水印文字，按回车键可换行</string>
