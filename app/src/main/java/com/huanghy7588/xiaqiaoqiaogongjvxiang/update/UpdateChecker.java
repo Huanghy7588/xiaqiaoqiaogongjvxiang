@@ -52,6 +52,10 @@ public class UpdateChecker {
     private static final String JSON_FALLBACK_URL =
             "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@main/update.json";
 
+    /** 最终兜底地址（raw.githubusercontent，jsDelivr 完全不可用时仍能拉到更新配置） */
+    private static final String JSON_RAW_URL =
+            "https://raw.githubusercontent.com/Huanghy7588/xiaqiaoqiaogongjvxiang/main/update.json";
+
     /** SharedPreferences 文件名 */
     private static final String PREF_NAME = "update_pref";
     /** 上次自动检测时间的键 */
@@ -124,18 +128,20 @@ public class UpdateChecker {
     }
 
     /**
-     * 依次尝试主地址（@latest）和备用地址（@main），带时间戳防 CDN 缓存。
-     * 任一地址拿到合法 JSON 即返回；全部失败返回 null。
+     * 依次尝试主地址（@latest）、备用地址（@main）、最终兜底（raw.githubusercontent）。
+     * 每个源最多重试 2 次；任一拿到合法 JSON 即返回；全部失败返回 null。
+     * 注意：jsDelivr 会忽略 query string，所以不靠时间戳绕缓存，而是靠 @latest 的 tag 即时解析。
      */
     private static UpdateModel fetchModelWithFallback() {
-        String[] bases = {JSON_BASE_URL, JSON_FALLBACK_URL};
-        for (String base : bases) {
-            try {
-                String url = base + "?t=" + System.currentTimeMillis();
-                UpdateModel model = UpdateModel.parse(fetchJson(url));
-                if (model != null) return model;
-            } catch (Exception e) {
-                e.printStackTrace();
+        String[] sources = {JSON_BASE_URL, JSON_FALLBACK_URL, JSON_RAW_URL};
+        for (String src : sources) {
+            for (int attempt = 0; attempt < 2; attempt++) {
+                try {
+                    UpdateModel model = UpdateModel.parse(fetchJson(src));
+                    if (model != null) return model;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
         return null;
@@ -186,10 +192,16 @@ public class UpdateChecker {
     private static void showUpdateDialog(Activity activity, UpdateModel.UpdateInfo info) {
         if (activity.isFinishing()) return;
 
-        String message = info.updateLog;
-        if (message == null || message.isEmpty()) {
-            message = "新版本：" + info.versionName;
+        String curVer = getLocalVersionName(activity);
+        StringBuilder sb = new StringBuilder();
+        sb.append("当前版本：").append(curVer).append("\n");
+        sb.append("最新版本：").append(info.versionName).append("\n\n");
+        if (info.updateLog != null && !info.updateLog.isEmpty()) {
+            sb.append(info.updateLog);
+        } else {
+            sb.append("新版本：").append(info.versionName);
         }
+        String message = sb.toString();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity)
                 .setTitle(R.string.update_title)
