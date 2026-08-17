@@ -111,6 +111,15 @@
                 android:text="@string/more_qq_hint"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:lineSpacingExtra="2dp"
+                android:text="@string/more_purchase_tip"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <!-- 分隔间距：把打赏区推到页面底部 -->

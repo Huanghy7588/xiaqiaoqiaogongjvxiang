@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 20,
-    "versionName": "1.1.8",
-    "updateLog": "v1.1.8 素材水印工具与界面统一：\n1. 素材水印工具改为「预览图固定 1:1，其余所有功能（位置调整、字体大小、文字框、描边序号、应用重置、上下张、清除、导入导出）统一在同一个区域一起滑动」\n2. 水印位置调整（位置选项、方向盘、字体大小）移到文字输入框下方、描边序号上方\n3. 统一返回按钮：无中生有表格的返回按钮改为与素材水印工具一致的图标返回按钮；新增统一顶栏组件 include_top_bar，今后所有新功能的返回按钮均复用此组件，保持全 App 一致",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.8/app-release.apk",
+    "versionCode": 21,
+    "versionName": "1.1.9",
+    "updateLog": "v1.1.9 素材水印大图预览修复 + 更多页说明：\n1. 修复素材水印工具「大图预览」把原图拉伸成手机比例的问题，现按原图真实比例（1:1/竖长/横图）居中显示，水印位置同步保持原图坐标不拉伸\n2. 更多页「投稿功能/优化功能」下方新增购买说明文字条（字帖小助手为收费软件，工具箱为公开软件，并附联系方式）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.9/app-release.apk",
     "forceUpdate": false
   }
 }

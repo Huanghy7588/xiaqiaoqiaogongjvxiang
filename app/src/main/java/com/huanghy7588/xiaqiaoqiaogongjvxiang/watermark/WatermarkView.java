@@ -139,6 +139,11 @@ public class WatermarkView extends View {
 
     public void setImageBitmap(Bitmap bitmap) {
         this.imageBitmap = bitmap;
+        // 关键修复：Bitmap 通常是异步加载后设置的，此时 onSizeChanged 早已执行过
+        // （当时 imageBitmap 为 null，computeImageRect 会把 imageRect 算成整屏矩形），
+        // 导致 drawBitmap 把原图拉伸铺满整屏。这里在设置 Bitmap 后重算 fitCenter 矩形，
+        // 保证任何比例都按原图比例居中显示、不拉伸（主界面与大图预览通用）。
+        computeImageRect();
         invalidate();
     }
 
