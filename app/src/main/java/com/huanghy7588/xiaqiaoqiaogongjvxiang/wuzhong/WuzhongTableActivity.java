@@ -102,7 +102,11 @@ public class WuzhongTableActivity extends Activity {
         btnModeRank = findViewById(R.id.btn_mode_rank);
         btnModeFun = findViewById(R.id.btn_mode_fun);
 
-        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        // 统一返回按钮（与素材水印工具一致）
+        findViewById(R.id.btn_back_home).setOnClickListener(v -> finish());
+        TextView tvTitle = findViewById(R.id.tv_top_title);
+        tvTitle.setText(R.string.tool_wuzhong);
+        tvTitle.setVisibility(View.VISIBLE);
 
         btnModeRank.setOnClickListener(v -> { mode = PersonData.MODE_RANK; updateModeButtons(); renderPersons(); });
         btnModeFun.setOnClickListener(v -> { mode = PersonData.MODE_FUN; updateModeButtons(); renderPersons(); });

@@ -6,38 +6,10 @@
     android:background="@color/bg_page"
     android:orientation="vertical">
 
-    <!-- 顶部栏 -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/brand_primary"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp">
-
-        <TextView
-            android:id="@+id/btn_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="‹ 返回"
-            android:textColor="@android:color/white"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:text="@string/tool_wuzhong"
-            android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <View
-            android:layout_width="48dp"
-            android:layout_height="1dp" />
-    </LinearLayout>
+    <!-- 统一顶部栏：标准化返回按钮（与素材水印工具一致） -->
+    <include
+        android:id="@+id/top_bar"
+        layout="@layout/include_top_bar" />
 
     <ScrollView
         android:layout_width="match_parent"

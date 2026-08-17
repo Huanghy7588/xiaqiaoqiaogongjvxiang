@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 19,
-    "versionName": "1.1.7",
-    "updateLog": "v1.1.7 素材水印工具修复与优化：\n1. 修复预览固定 1:1 正方形后中小屏功能区无法滑动的问题（预览高度自适应剩余空间，保证下方可滚动）\n2. 未导入图片时，预览区中央显示「导入图片」按钮，点击直接选图\n3. 自动记忆水印文字、描边、序号、位置设置，误返回不再丢失（图片仍需重新导入）\n4. 新增「清除导入图片」按钮（二次确认，文字与设置保留）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.7/app-release.apk",
+    "versionCode": 20,
+    "versionName": "1.1.8",
+    "updateLog": "v1.1.8 素材水印工具与界面统一：\n1. 素材水印工具改为「预览图固定 1:1，其余所有功能（位置调整、字体大小、文字框、描边序号、应用重置、上下张、清除、导入导出）统一在同一个区域一起滑动」\n2. 水印位置调整（位置选项、方向盘、字体大小）移到文字输入框下方、描边序号上方\n3. 统一返回按钮：无中生有表格的返回按钮改为与素材水印工具一致的图标返回按钮；新增统一顶栏组件 include_top_bar，今后所有新功能的返回按钮均复用此组件，保持全 App 一致",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.8/app-release.apk",
     "forceUpdate": false
   }
 }

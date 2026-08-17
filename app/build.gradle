@@ -16,8 +16,8 @@ android {
         // 2) versionName 的「补丁号」只能是单位数 0-9，禁止两位数！
         //    即：1.0.1 → … → 1.0.9 → 1.1.0 → 1.1.1 → … → 1.1.9 → 1.2.0 → …
         //    1.0.9 之后直接到 1.1.0，不要出现 1.0.10 / 1.0.11 这种两位数补丁号
-        versionCode 19
-        versionName "1.1.7"
+        versionCode 20
+        versionName "1.1.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
