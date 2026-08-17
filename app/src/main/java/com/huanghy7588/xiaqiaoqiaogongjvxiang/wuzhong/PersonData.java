@@ -32,8 +32,11 @@ public class PersonData implements Serializable {
     /** 色卡（蓝红方与英雄皮肤之间） */
     public int colorCard = -1; // 0 高饱和, 1 低饱和
 
-    /** ② 英雄/皮肤、ID名、ID条 */
-    public String heroSkin = "";
+    /** ② 英雄、皮肤（各自独立输入 + 各自独立选颜色） */
+    public String hero = "";
+    public String skin = "";
+    public int heroColor = -1; // 0 队伍色(红方=红/蓝方=蓝), 1 金色
+    public int skinColor = -1; // 0 队伍色(红方=红/蓝方=蓝), 1 金色
     public String idName = "";
     public int idBar = -1; // -1 未选, 0 无, 1 有（仅第一个选"有"后其他人不可选）
 
@@ -94,9 +97,11 @@ public class PersonData implements Serializable {
 
     /** 单元格内容 */
     public static class Cell {
-        public String text;     // 文字（可为 null）
-        public String imageAsset; // assets 图片路径（可为 null）
+        public String text;         // 文字（可为 null）
+        public String imageAsset;   // assets 图片路径（可为 null）
+        public Integer textColor;   // 文字颜色（null = 默认黑色）
         public Cell(String t, String img) { text = t; imageAsset = img; }
+        public Cell(String t, String img, Integer color) { text = t; imageAsset = img; textColor = color; }
     }
 
     /** 表格行 */
@@ -118,6 +123,24 @@ public class PersonData implements Serializable {
         return (v >= 0 && v < arr.length) ? arr[v] : "";
     }
 
+    /** 英雄/皮肤颜色常量 */
+    public static final int COLOR_RED = 0xFFD32F2F;   // 红方队伍色
+    public static final int COLOR_BLUE = 0xFF1565C0;   // 蓝方队伍色
+    public static final int COLOR_GOLD = 0xFFFF8F00;   // 金色
+
+    /**
+     * 根据颜色选择返回带颜色的 Cell 文字。
+     * @param text  英雄或皮肤名
+     * @param color 0=队伍色(红/蓝), 1=金色
+     * @param side  0=蓝方, 1=红方
+     */
+    private Cell colorize(String text, int color, int side) {
+        String t = text == null ? "" : text;
+        if (color == 1) return new Cell(t, null, COLOR_GOLD);
+        if (color == 0) return new Cell(t, null, side == 1 ? COLOR_RED : COLOR_BLUE);
+        return new Cell(t, null);
+    }
+
     /** 选填项标签（固定顺序，供渲染器做行并集） */
     public static final String[] OPTIONAL_LABELS = {"铭记之石", "英雄签名", "职业标", "全国标"};
 
@@ -129,8 +152,9 @@ public class PersonData implements Serializable {
         rows.add(new Row("蓝方/红方", new Cell(side == 0 ? "蓝方" : side == 1 ? "红方" : "", null)));
         // 色卡
         rows.add(new Row("色卡", new Cell(colorCard == 0 ? "高饱和" : colorCard == 1 ? "低饱和" : "", null)));
-        // ②
-        rows.add(new Row("英雄/皮肤", new Cell(heroSkin == null ? "" : heroSkin, null)));
+        // ② 英雄、皮肤（各自带颜色）
+        rows.add(new Row("英雄", colorize(hero, heroColor, side)));
+        rows.add(new Row("皮肤", colorize(skin, skinColor, side)));
         rows.add(new Row("ID名", new Cell(idName == null ? "" : idName, null)));
         if (idBar == 1) rows.add(new Row("ID条", new Cell("有ID条", null)));
 

@@ -151,7 +151,7 @@ public class WuzhongTableActivity extends Activity {
         ImageView thumb = findViewById(R.id.preview_thumb);
         if (thumb == null) return;
         try {
-            Bitmap b = new TableRenderer(this).render(persons, mode, 1000);
+            Bitmap b = new TableRenderer(this).render(persons, mode, 800);
             if (b != null) {
                 // S6 修复：先回收旧缩略图，避免反复操作内存暴涨
                 Bitmap old = lastThumb;
@@ -211,12 +211,21 @@ public class WuzhongTableActivity extends Activity {
         tip.setTextColor(Color.parseColor("#F57F17"));
         card.addView(tip);
 
-        // ② 英雄/皮肤 + ID名 + ID条
+        // ② 英雄、皮肤（各自独立输入 + 各自独立选颜色）
         card.addView(sectionTitle(sec, "英雄、皮肤"));
-        TextView heroTip = subTitle("蓝方：英雄/皮肤选 蓝色 或 金色\n红方：英雄/皮肤选 红色 或 金色\n（英雄与皮肤同色）");
+        // 根据已选队伍决定颜色按钮标签
+        String teamColorLabel = p.side == 1 ? "红色" : "蓝色";
+        TextView heroTip = subTitle("蓝方：英雄/皮肤选 蓝色 或 金色\n红方：英雄/皮肤选 红色 或 金色\n（英雄与皮肤可分别选色）");
         heroTip.setTextColor(Color.parseColor("#F57F17"));
         card.addView(heroTip);
-        card.addView(makeEdit("请输入英雄、皮肤", p.heroSkin, s -> p.heroSkin = s));
+        // 英雄
+        card.addView(subTitle("英雄"));
+        card.addView(makeEdit("请输入英雄名", p.hero, s -> p.hero = s));
+        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.heroColor, i -> { p.heroColor = i; renderPersons(); }));
+        // 皮肤
+        card.addView(subTitle("皮肤"));
+        card.addView(makeEdit("请输入皮肤名", p.skin, s -> p.skin = s));
+        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.skinColor, i -> { p.skinColor = i; renderPersons(); }));
         card.addView(sectionTitle("ID名"));
         card.addView(makeEdit("请输入ID名", p.idName, s -> p.idName = s));
 
@@ -659,9 +668,9 @@ public class WuzhongTableActivity extends Activity {
             return;
         }
         Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
-        // S5 修复：2500px 大图渲染移出主线程，避免 ANR
+        // S5 修复：大图渲染移出主线程，避免 ANR（宽度 1800 匹配渲染器基准）
         executor.execute(() -> {
-            Bitmap bmp = new TableRenderer(this).render(persons, mode, 2500);
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1800);
             runOnUiThread(() -> showPreviewDialog(bmp));
         });
     }
@@ -718,9 +727,9 @@ public class WuzhongTableActivity extends Activity {
 
     private void doExport() {
         Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
-        // S5 修复：2500px 大图渲染 + PNG 压缩移出主线程，避免 ANR
+        // S5 修复：大图渲染 + PNG 压缩移出主线程，避免 ANR（宽度 1800）
         executor.execute(() -> {
-            Bitmap bmp = new TableRenderer(this).render(persons, mode, 2500);
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1800);
             if (bmp == null) {
                 runOnUiThread(() -> Toast.makeText(this, "生成失败", Toast.LENGTH_SHORT).show());
                 return;

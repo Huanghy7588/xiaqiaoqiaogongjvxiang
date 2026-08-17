@@ -22,12 +22,12 @@ import java.util.Map;
  */
 public class TableRenderer {
 
-    private static final float BASE_W = 2500f;     // 基准宽（导出用 2500）
-    private static final float BASE_LABEL_W = 560f;
-    private static final float BASE_HEADER_H = 120f;
-    private static final float BASE_TEXT_ROW_H = 140f;
-    private static final float BASE_MAX_IMG_H = 420f;
-    private static final float BASE_PAD = 16f;
+    private static final float BASE_W = 1800f;      // 基准宽（缩窄，避免表格过宽）
+    private static final float BASE_LABEL_W = 380f; // 标签列缩窄
+    private static final float BASE_HEADER_H = 130f;
+    private static final float BASE_TEXT_ROW_H = 150f; // 行高略增，配合更大字体
+    private static final float BASE_MAX_IMG_H = 300f;  // 图片最大高度缩小
+    private static final float BASE_PAD = 14f;
 
     /** 渲染宽度由调用方指定：导出 2500，页面内嵌预览用小图省内存 */
     public Bitmap render(List<PersonData> persons, int mode, int imgW) {
@@ -112,9 +112,9 @@ public class TableRenderer {
 
         // 表头
         cv.drawRect(0, 0, imgW, headerH, pHeaderBg);
-        drawCellText(cv, "项目", 0, 0, labelW, headerH, 44 * s, true, pad);
+        drawCellText(cv, "项目", 0, 0, labelW, headerH, 48 * s, true, pad, null);
         for (int i = 0; i < n; i++) {
-            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 44 * s, true, pad);
+            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 48 * s, true, pad, null);
         }
         cv.drawLine(0, headerH, imgW, headerH, pLine);
 
@@ -128,7 +128,7 @@ public class TableRenderer {
             String label = labels.get(r);
             // 标签列
             cv.drawRect(0, y, labelW, y + h, pLabelBg);
-            drawCellText(cv, label, 0, y, labelW, h, 38 * s, false, pad);
+            drawCellText(cv, label, 0, y, labelW, h, 42 * s, false, pad, null);
             // 竖向分隔线
             cv.drawLine(labelW, y, labelW, y + h, pLine);
             // 人物列
@@ -160,8 +160,6 @@ public class TableRenderer {
     private final Paint pLine = new Paint();
     private final Paint pLabelBg = new Paint();
     private final Paint pHeaderBg = new Paint();
-    private final Paint pText = new Paint(Paint.ANTI_ALIAS_FLAG);
-    private final Paint pTextWhite = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint pBlack = new Paint();
 
     public TableRenderer(Context context) {
@@ -170,10 +168,6 @@ public class TableRenderer {
         pLine.setStrokeWidth(3);
         pLabelBg.setColor(Color.parseColor("#F0F0F0"));
         pHeaderBg.setColor(Color.parseColor("#4CAF50"));
-        pText.setColor(Color.parseColor("#212121"));
-        pText.setTextAlign(Paint.Align.CENTER);
-        pTextWhite.setColor(Color.WHITE);
-        pTextWhite.setTextAlign(Paint.Align.CENTER);
         pBlack.setColor(Color.BLACK);
     }
 
@@ -189,15 +183,15 @@ public class TableRenderer {
         if (c == null) return;
         boolean hasImg = c.imageAsset != null;
         boolean hasText = c.text != null && !c.text.isEmpty();
-        int textZone = Math.min(Math.round(60 * s), h / 3);
+        int textZone = Math.min(Math.round(65 * s), h / 3);
         if (hasImg && hasText) {
             // 文字在上，图片在下
-            drawCellText(cv, c.text, x, y, w, textZone, 34 * s, false, pad);
+            drawCellText(cv, c.text, x, y, w, textZone, 38 * s, false, pad, c.textColor);
             drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH, assetCache);
         } else if (hasImg) {
             drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH, assetCache);
         } else if (hasText) {
-            drawCellText(cv, c.text, x, y, w, h, 38 * s, false, pad);
+            drawCellText(cv, c.text, x, y, w, h, 42 * s, false, pad, c.textColor);
         }
     }
 
@@ -217,13 +211,22 @@ public class TableRenderer {
         cv.drawBitmap(b, dx, dy, null);
     }
 
-    private void drawCellText(Canvas cv, String text, int x, int y, int w, int h, float size, boolean white, int pad) {
+    private void drawCellText(Canvas cv, String text, int x, int y, int w, int h, float size, boolean white,
+                              int pad, Integer textColor) {
         if (text == null || text.isEmpty()) return;
-        Paint paint = white ? pTextWhite : pText;
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextAlign(Paint.Align.CENTER);
+        if (white) {
+            paint.setColor(Color.WHITE);
+        } else if (textColor != null) {
+            paint.setColor(textColor);
+        } else {
+            paint.setColor(Color.parseColor("#212121"));
+        }
         paint.setTextSize(size);
         // 自适应缩放，防止文字超出列宽
         float maxW = w - pad * 2;
-        while (paint.measureText(text) > maxW && paint.getTextSize() > 14 * Math.max(0.4f, size / 38f)) {
+        while (paint.measureText(text) > maxW && paint.getTextSize() > 14 * Math.max(0.4f, size / 42f)) {
             paint.setTextSize(paint.getTextSize() - 1);
         }
         Paint.FontMetrics fm = paint.getFontMetrics();
