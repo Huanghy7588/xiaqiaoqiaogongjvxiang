@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 18,
-    "versionName": "1.1.6",
-    "updateLog": "v1.1.6 素材水印工具预览优化：\n1. 预览图改为固定 1:1 正方形，图片按真实比例居中显示（竖长图/横图长边顶满、其余留黑边，导出仍按原图比例）\n2. 水印位置调整（位置选项、方向盘、字体大小）移到预览正下方、文字框上方，其余功能可滚动\n3. 水印位置选项顺序调整为：左下角 → 居中 → 右下角",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.6/app-release.apk",
+    "versionCode": 19,
+    "versionName": "1.1.7",
+    "updateLog": "v1.1.7 素材水印工具修复与优化：\n1. 修复预览固定 1:1 正方形后中小屏功能区无法滑动的问题（预览高度自适应剩余空间，保证下方可滚动）\n2. 未导入图片时，预览区中央显示「导入图片」按钮，点击直接选图\n3. 自动记忆水印文字、描边、序号、位置设置，误返回不再丢失（图片仍需重新导入）\n4. 新增「清除导入图片」按钮（二次确认，文字与设置保留）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.7/app-release.apk",
     "forceUpdate": false
   }
 }

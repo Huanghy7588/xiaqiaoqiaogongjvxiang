@@ -30,6 +30,12 @@
     <string name="wm_fine_tune_pos">位置调整</string>
     <string name="wm_font_size">字体大小</string>
     <string name="wm_reset_pos">重置位置</string>
+    <string name="wm_clear_images">清除导入图片</string>
+    <string name="wm_clear_confirm_title">清除导入图片</string>
+    <string name="wm_clear_confirm_msg">确定清除所有已导入的图片吗？水印文字与设置会保留。</string>
+    <string name="wm_clear_confirm_ok">清除</string>
+    <string name="wm_clear_confirm_cancel">取消</string>
+    <string name="wm_cleared_toast">已删除导入的图片</string>
     <string name="wm_no_images">尚未导入图片</string>
     <string name="wm_index_info">第 %1$d / %2$d 张</string>
     <string name="wm_exporting">正在导出 %1$d/%2$d…</string>

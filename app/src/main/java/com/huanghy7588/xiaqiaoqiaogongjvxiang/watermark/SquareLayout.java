@@ -21,6 +21,9 @@ public class SquareLayout extends FrameLayout {
     /** 预览最大边长（dp），避免平板 / 大屏上正方形过大挤占下方控件 */
     private static final int MAX_SIDE_DP = 400;
 
+    /** 预览最小边长（dp），空间不足时也不小于此值，保证预览始终可见 */
+    private static final int MIN_SIDE_DP = 200;
+
     public SquareLayout(@NonNull Context context) {
         super(context);
     }
@@ -35,14 +38,30 @@ public class SquareLayout extends FrameLayout {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        int availableWidth = MeasureSpec.getSize(widthMeasureSpec);
+        int widthMode = MeasureSpec.getMode(widthMeasureSpec);
+        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        int heightMode = MeasureSpec.getMode(heightMeasureSpec);
+        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
 
-        // 上限保护：不超过 MAX_SIDE_DP，避免大屏设备预览占满整屏
-        int maxSidePx = Math.round(MAX_SIDE_DP * getResources().getDisplayMetrics().density);
-        int side = Math.min(availableWidth, maxSidePx);
-        if (side <= 0) side = availableWidth;
+        float density = getResources().getDisplayMetrics().density;
+        int maxSidePx = Math.round(MAX_SIDE_DP * density);
+        int minSidePx = Math.round(MIN_SIDE_DP * density);
 
-        // 固定为正方向：宽 = 高 = side
+        // 宽度候选：无明确约束时用上限；否则用父给的宽度（屏幕宽）
+        int widthCandidate = (widthMode == MeasureSpec.UNSPECIFIED) ? maxSidePx : widthSize;
+        int side = Math.min(widthCandidate, maxSidePx);
+
+        // 高度若被精确约束（LinearLayout 用 weight 分配剩余空间），正方形边长不超过该高度，
+        // 这样空间不足时预览会自动缩小，给下方 ScrollView 留出可滚动空间
+        if (heightMode == MeasureSpec.EXACTLY && heightSize > 0) {
+            side = Math.min(side, heightSize);
+        }
+
+        // 保底最小边长，保证预览始终可见
+        if (side < minSidePx) side = minSidePx;
+        if (side <= 0) side = widthCandidate;
+
+        // 固定为正方形：宽 = 高 = side
         int squareSpec = MeasureSpec.makeMeasureSpec(side, MeasureSpec.EXACTLY);
         super.onMeasure(squareSpec, squareSpec);
     }

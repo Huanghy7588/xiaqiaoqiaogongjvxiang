@@ -1,7 +1,9 @@
 package com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
+import android.content.SharedPreferences;
 import android.content.ContentValues;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -11,6 +13,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.MediaStore;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.Manifest;
@@ -48,7 +51,8 @@ public class WatermarkToolActivity extends AppCompatActivity {
     private WatermarkView watermarkView;
     private EditText etText;
     private SwitchMaterial swStroke, swNumbering;
-    private TextView tvIndex, tvNoImage;
+    private TextView tvIndex;
+    private Button btnImportEmpty;
 
     /** 导入的图片列表 */
     private final List<ImageData> imageList = new ArrayList<>();
@@ -57,6 +61,13 @@ public class WatermarkToolActivity extends AppCompatActivity {
 
     /** 当前预览用 Bitmap */
     private Bitmap currentBitmap;
+
+    /** 记忆：水印设置持久化（SharedPreferences），避免误返回后文字与设置丢失 */
+    private static final String PREFS_NAME = "wm_prefs";
+    private static final String KEY_TEXT = "watermark_text";
+    private static final String KEY_STROKE = "stroke";
+    private static final String KEY_NUMBERING = "numbering";
+    private static final String KEY_POS_MODE = "position_mode";
 
     /** M2 修复：后台图片解码线程池，避免大图解码阻塞主线程 */
     private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
@@ -99,6 +110,9 @@ public class WatermarkToolActivity extends AppCompatActivity {
 
         initViews();
         initListeners();
+        loadPrefs();
+        // 统一初始化预览区状态（空列表时显示「导入图片」按钮、隐藏序号）
+        showCurrentImage();
         updateIndexText();
     }
 
@@ -108,7 +122,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
         swStroke = findViewById(R.id.sw_stroke);
         swNumbering = findViewById(R.id.sw_numbering);
         tvIndex = findViewById(R.id.tv_index);
-        tvNoImage = findViewById(R.id.tv_no_image);
+        btnImportEmpty = findViewById(R.id.btn_import_empty);
     }
 
     private void initListeners() {
@@ -170,8 +184,21 @@ public class WatermarkToolActivity extends AppCompatActivity {
         findViewById(R.id.btn_import).setOnClickListener(v ->
                 imagePicker.launch("image/*"));
 
+        // 空状态（尚未导入图片）下的「导入图片」按钮，逻辑与上方导入完全一致
+        btnImportEmpty.setOnClickListener(v -> imagePicker.launch("image/*"));
+
         // 导出
         findViewById(R.id.btn_export).setOnClickListener(v -> exportImages());
+
+        // 清除导入的图片（带二次确认，文字与设置保留）
+        findViewById(R.id.btn_clear_images).setOnClickListener(v -> {
+            new AlertDialog.Builder(this)
+                    .setTitle(R.string.wm_clear_confirm_title)
+                    .setMessage(R.string.wm_clear_confirm_msg)
+                    .setPositiveButton(R.string.wm_clear_confirm_ok, (d, w) -> clearImages())
+                    .setNegativeButton(R.string.wm_clear_confirm_cancel, null)
+                    .show();
+        });
     }
 
     // ==================== 图片显示与导航 ====================
@@ -179,14 +206,14 @@ public class WatermarkToolActivity extends AppCompatActivity {
     /** 显示当前索引的图片（M2 修复：后台解码，避免大图卡主线程） */
     private void showCurrentImage() {
         if (imageList.isEmpty()) {
-            tvNoImage.setVisibility(android.view.View.VISIBLE);
+            btnImportEmpty.setVisibility(android.view.View.VISIBLE);
             watermarkView.setImageBitmap(null);
             if (currentBitmap != null) { currentBitmap.recycle(); currentBitmap = null; }
             updateIndexText();
             return;
         }
 
-        tvNoImage.setVisibility(android.view.View.GONE);
+        btnImportEmpty.setVisibility(android.view.View.GONE);
         final ImageData data = imageList.get(currentIndex);
         final int indexForLoad = currentIndex;
         loadingIndex = indexForLoad;
@@ -305,6 +332,53 @@ public class WatermarkToolActivity extends AppCompatActivity {
         android.widget.RadioButton rbBottomLeft = findViewById(R.id.rb_pos_bottom_left);
         if (rbBottomLeft.isChecked()) return ImageData.POSITION_BOTTOM_LEFT;
         return ImageData.POSITION_BOTTOM_RIGHT;
+    }
+
+    // ==================== 记忆（持久化水印设置） ====================
+
+    /** 恢复上次保存的水印文字与基础设置 */
+    private void loadPrefs() {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String text = sp.getString(KEY_TEXT, "");
+        if (text != null && !text.isEmpty()) {
+            // 触发 TextWatcher 同步给 watermarkView，这里无需重复设置
+            etText.setText(text);
+        }
+        boolean stroke = sp.getBoolean(KEY_STROKE, false);
+        boolean numbering = sp.getBoolean(KEY_NUMBERING, false);
+        swStroke.setChecked(stroke);
+        swNumbering.setChecked(numbering);
+        int mode = sp.getInt(KEY_POS_MODE, ImageData.POSITION_CENTER);
+        int rbId = R.id.rb_pos_center;
+        if (mode == ImageData.POSITION_BOTTOM_LEFT) rbId = R.id.rb_pos_bottom_left;
+        else if (mode == ImageData.POSITION_BOTTOM_RIGHT) rbId = R.id.rb_pos_bottom_right;
+        ((android.widget.RadioGroup) findViewById(R.id.rg_position)).check(rbId);
+    }
+
+    /** 保存当前水印文字与基础设置（返回 / 切后台时调用，避免误退出丢失） */
+    private void savePrefs() {
+        SharedPreferences sp = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(KEY_TEXT, etText.getText().toString());
+        editor.putBoolean(KEY_STROKE, swStroke.isChecked());
+        editor.putBoolean(KEY_NUMBERING, swNumbering.isChecked());
+        editor.putInt(KEY_POS_MODE, getSelectedPositionMode());
+        editor.apply();
+    }
+
+    /** 清除所有已导入的图片（水印文字与设置保留） */
+    private void clearImages() {
+        imageList.clear();
+        currentIndex = 0;
+        loadingIndex = -1;
+        if (currentBitmap != null && !currentBitmap.isRecycled()) {
+            currentBitmap.recycle();
+        }
+        currentBitmap = null;
+        watermarkView.setImageBitmap(null);
+        btnImportEmpty.setVisibility(android.view.View.VISIBLE);
+        updateIndexText();
+        Toast.makeText(this, R.string.wm_cleared_toast, Toast.LENGTH_SHORT).show();
     }
 
     /** 打开大图预览 */
@@ -541,6 +615,13 @@ public class WatermarkToolActivity extends AppCompatActivity {
                 try { is.close(); } catch (IOException ignored) {}
             }
         }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // 返回 / 切后台时保存水印文字与设置，下次进入不再丢失
+        savePrefs();
     }
 
     @Override
