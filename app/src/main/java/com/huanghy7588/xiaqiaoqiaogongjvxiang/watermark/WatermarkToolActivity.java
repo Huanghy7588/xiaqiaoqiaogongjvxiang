@@ -13,11 +13,14 @@ import android.os.Looper;
 import android.provider.MediaStore;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
@@ -69,6 +72,16 @@ public class WatermarkToolActivity extends AppCompatActivity {
                     showCurrentImage();
                     Toast.makeText(this, "已导入 " + uris.size() + " 张图片",
                             Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    /** 存储权限请求（Android 9 及以下保存图片用，M1 修复） */
+    private final ActivityResultLauncher<String> storagePermLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (Boolean.TRUE.equals(granted)) {
+                    startExport();
+                } else {
+                    Toast.makeText(this, getString(R.string.wm_export_fail), Toast.LENGTH_SHORT).show();
                 }
             });
 
@@ -296,22 +309,28 @@ public class WatermarkToolActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // 从大图预览返回时，同步预览里拖拽过的位置（仅打开过预览才处理）
-        if (PreviewActivity.sharedUsed && !imageList.isEmpty() && currentBitmap != null) {
-            if (PreviewActivity.sharedIndex >= 0
-                    && PreviewActivity.sharedIndex < imageList.size()) {
-                currentIndex = PreviewActivity.sharedIndex;
+        if (PreviewActivity.sharedUsed && !imageList.isEmpty()) {
+            int idx = PreviewActivity.sharedIndex;
+            if (idx >= 0 && idx < imageList.size()) {
+                if (idx != currentIndex) {
+                    // S2 修复：索引变了必须重新加载对应 Bitmap，否则画面与序号错位
+                    currentIndex = idx;
+                    showCurrentImage();
+                } else {
+                    // 同一张，但预览里可能拖拽改了水印位置，重新应用
+                    ImageData data = imageList.get(currentIndex);
+                    watermarkView.setPositionMode(data.positionMode);
+                    watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
+                    watermarkView.setTextSizeFactor(data.textSizeFactor);
+                }
+                updateIndexText();
             }
-            ImageData data = imageList.get(currentIndex);
-            watermarkView.setPositionMode(data.positionMode);
-            watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
-            watermarkView.setTextSizeFactor(data.textSizeFactor);
-            updateIndexText();
         }
     }
 
     // ==================== 导出 ====================
 
-    /** 导出所有图片到相册 */
+    /** 导出所有图片到相册（入口：先做权限检查，再执行实际导出） */
     private void exportImages() {
         if (imageList.isEmpty()) {
             Toast.makeText(this, "请先导入图片", Toast.LENGTH_SHORT).show();
@@ -321,7 +340,20 @@ public class WatermarkToolActivity extends AppCompatActivity {
             Toast.makeText(this, "请输入水印文字", Toast.LENGTH_SHORT).show();
             return;
         }
+        // M1 修复：Android 9 及以下通过 MediaStore 写入需要 WRITE_EXTERNAL_STORAGE
+        // 运行时权限，此前从未请求，导致导出失败。先请求，授权后再导出。
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                && ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
+            storagePermLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            return;
+        }
+        startExport();
+    }
 
+    /** 实际执行导出（权限已就绪或运行在 Android 10+） */
+    private void startExport() {
         saveCurrentPosition();
 
         ProgressDialog progressDialog = new ProgressDialog(this);
@@ -338,33 +370,48 @@ public class WatermarkToolActivity extends AppCompatActivity {
         Handler handler = new Handler(Looper.getMainLooper());
         final int[] successCount = {0};
         final int total = imageList.size();
+        // M5 修复：导出前拷贝一份快照，避免子线程与主线程共享 ArrayList 造成数据竞争
+        final List<ImageData> snapshot = new ArrayList<>(imageList);
 
         new Thread(() -> {
-            for (int i = 0; i < total; i++) {
-                ImageData data = imageList.get(i);
-                boolean ok = exportSingle(data, text, stroke, numbering, i + 1);
-                if (ok) successCount[0]++;
-                final int progress = i + 1;
+            try {
+                for (int i = 0; i < total; i++) {
+                    ImageData data = snapshot.get(i);
+                    boolean ok;
+                    try {
+                        ok = exportSingle(data, text, stroke, numbering, i + 1);
+                    } catch (Throwable t) { // S3/M3 修复：捕获 OOM 等，单张失败不影响其余
+                        t.printStackTrace();
+                        ok = false;
+                    }
+                    if (ok) successCount[0]++;
+                    final int progress = i + 1;
+                    handler.post(() -> {
+                        // Activity 可能已销毁
+                        if (isFinishing() || isDestroyed()) return;
+                        progressDialog.setMessage(String.format(
+                                getString(R.string.wm_exporting), progress, total));
+                        progressDialog.setProgress(progress);
+                    });
+                }
+            } finally {
+                // S3 修复：无论成功还是异常，都保证弹窗关闭，避免永久卡死
                 handler.post(() -> {
-                    // Activity 可能已销毁
-                    if (isFinishing() || isDestroyed()) return;
-                    progressDialog.setMessage(String.format(
-                            getString(R.string.wm_exporting), progress, total));
-                    progressDialog.setProgress(progress);
+                    if (isFinishing() || isDestroyed()) {
+                        progressDialog.dismiss();
+                        return;
+                    }
+                    if (progressDialog.isShowing()) progressDialog.dismiss();
+                    if (successCount[0] > 0) {
+                        Toast.makeText(this,
+                                String.format(getString(R.string.wm_export_done), successCount[0]),
+                                Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, getString(R.string.wm_export_fail),
+                                Toast.LENGTH_SHORT).show();
+                    }
                 });
             }
-            handler.post(() -> {
-                if (isFinishing() || isDestroyed()) return;
-                progressDialog.dismiss();
-                if (successCount[0] > 0) {
-                    Toast.makeText(this,
-                            String.format(getString(R.string.wm_export_done), successCount[0]),
-                            Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(this, getString(R.string.wm_export_fail),
-                            Toast.LENGTH_SHORT).show();
-                }
-            });
         }).start();
     }
 
@@ -479,7 +526,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
             is.close();
             is = null;
             return bmp;
-        } catch (IOException e) {
+        } catch (IOException | OutOfMemoryError e) { // M3 修复：大图解码可能抛 OOM
             e.printStackTrace();
             return null;
         } finally {

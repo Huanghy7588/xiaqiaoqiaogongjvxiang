@@ -25,3 +25,12 @@ app-debug.apk
 
 # 构建输出
 app/build/
+
+# 源图片素材（仅本地参考，app 资源已拷贝到 assets/）
+/Photo/
+
+# 代码审查报告（一次性产物）
+/code-review-*/
+
+# Trae IDE 产物
+/.trae-html-share-packages/

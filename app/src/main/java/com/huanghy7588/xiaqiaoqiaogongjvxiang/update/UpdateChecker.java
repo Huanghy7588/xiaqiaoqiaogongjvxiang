@@ -17,6 +17,7 @@ import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Map;
@@ -105,24 +106,32 @@ public class UpdateChecker {
         if (checkingMap.containsKey(key)) return; // 该 Activity 已有检测进行中
         checkingMap.put(key, true);
 
-        // 记录检测时间
-        activity.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis())
-                .apply();
-
         final boolean manual = isManual;
+        // 用 ApplicationContext 做网络请求上下文，避免子线程持有 Activity 强引用（U2）
+        final Context appContext = activity.getApplicationContext();
+        // 弱引用持有 Activity，回调中判空/销毁后再使用，避免泄漏（U2）
+        final WeakReference<Activity> activityRef = new WeakReference<>(activity);
+
         new Thread(() -> {
             final UpdateModel model = fetchModelWithFallback();
 
             new Handler(Looper.getMainLooper()).post(() -> {
                 checkingMap.remove(key);
+                Activity act = activityRef.get();
                 if (model == null) {
-                    if (manual) toast(activity, "检测失败，请检查网络");
+                    // 检测失败：不记录时间（U1），仅在手动检测且界面仍存活时提示
+                    if (manual && act != null && !act.isFinishing() && !act.isDestroyed()) {
+                        toast(act, "检测失败，请检查网络");
+                    }
                     return;
                 }
-                if (activity.isFinishing() || activity.isDestroyed()) return;
-                showAnnouncementThenUpdate(activity, model, manual);
+                // 检测成功才记录时间（U1）：失败不节流，避免无网络时被 24h 屏蔽
+                appContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+                        .edit()
+                        .putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis())
+                        .apply();
+                if (act == null || act.isFinishing() || act.isDestroyed()) return;
+                showAnnouncementThenUpdate(act, model, manual);
             });
         }).start();
     }

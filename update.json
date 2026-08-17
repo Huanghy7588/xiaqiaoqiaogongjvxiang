@@ -1,14 +1,14 @@
 {
   "announcement": {
-    "title": "欢迎使用夏乔乔工具箱",
-    "content": "1. 首个版本上线，包含素材水印工具。\n2. 支持黑白双色文字水印、描边、序号功能。\n3. 更多功能持续开发中，敬请期待！",
+    "title": "夏乔乔工具箱 v1.1.2 更新啦",
+    "content": "本次更新内容：\n1. 无中生有表格·天梯排名新增图片选项（与分路排名同款点图样式）\n2. 图片保存/导出稳定性优化，修复多处潜在崩溃与卡顿\n3. 代码质量整改，体验更顺滑\n\n更多实用功能持续开发中，欢迎在「更多」页投稿建议～",
     "enabled": true
   },
   "update": {
-    "versionCode": 13,
-    "versionName": "1.1.1",
-    "updateLog": "无中生有表格工具优化：\n1. 新增表格预览：页面顶部“预览表格”按钮，全屏查看生成效果，双指缩放、拖动，可直接保存\n2. 图片选项直接贴在表单上，点图即选，更直观清晰\n3. 必填项序号改为连续编号，不再跳号\n4. 选填项改为打勾/打叉，且每个人物单独设置",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.1/app-release.apk",
+    "versionCode": 14,
+    "versionName": "1.1.2",
+    "updateLog": "无中生有表格优化 + 稳定性大修：\n1. 天梯排名新增图片选项（点图选择，与分路排名同款样式），文字输入框保留可填具体天梯排名\n2. 稳定性/健壮性优化：修复多处潜在崩溃（大图预览进程重建、导出线程异常卡死）、主线程渲染 ANR、Bitmap 内存泄漏\n3. 修复 Android 9 及以下保存/导出、长按保存赞赏码需授权存储权限的问题\n4. 更新检测仅在成功时记录时间（避免无网络被 24h 屏蔽）、降低内存泄漏与公告时效性问题",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.2/app-release.apk",
     "forceUpdate": false
   }
 }

@@ -130,7 +130,12 @@ public class PreviewActivity extends AppCompatActivity {
 
     @Override
     public void finish() {
-        saveCurrent();
+        // S1 修复：进程重建后静态字段为 null，直接 saveCurrent() 会 NPE 崩溃。
+        // 仅当数据有效时才保存，避免崩溃。
+        if (sharedImages != null && !sharedImages.isEmpty()
+                && currentIndex >= 0 && currentIndex < sharedImages.size()) {
+            saveCurrent();
+        }
         sharedIndex = currentIndex;
         super.finish();
     }

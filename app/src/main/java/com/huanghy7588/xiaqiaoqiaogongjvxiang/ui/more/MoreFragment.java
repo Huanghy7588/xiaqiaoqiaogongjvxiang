@@ -27,7 +27,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.fragment.app.Fragment;
+
+import java.lang.ref.WeakReference;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.update.UpdateChecker;
@@ -44,6 +48,27 @@ public class MoreFragment extends Fragment {
     private static final String QQ_NUMBER = "3089096785";
     private static final String SAVE_FILE_NAME = "xiaqiaoqiao_donate_qr.png";
 
+    private Button btnCheckUpdate;
+    private final Runnable restoreBtn = () -> {
+        if (btnCheckUpdate != null) {
+            btnCheckUpdate.setText(R.string.more_check_update);
+            btnCheckUpdate.setEnabled(true);
+        }
+    };
+
+    // pre-Q 存储权限请求（M8 修复：此前只检查不请求）
+    private WeakReference<ImageView> ivQrPending;
+    private final ActivityResultLauncher<String> storagePermLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), granted -> {
+                if (Boolean.TRUE.equals(granted)) {
+                    ImageView iv = ivQrPending != null ? ivQrPending.get() : null;
+                    if (iv != null) doSaveQrToGallery(iv);
+                } else {
+                    Toast.makeText(requireContext(), R.string.more_donate_save_fail, Toast.LENGTH_SHORT).show();
+                }
+                ivQrPending = null;
+            });
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -57,18 +82,16 @@ public class MoreFragment extends Fragment {
         tvVersion.setText(versionName + " (" + versionCode + ")");
 
         // 手动检查更新
-        Button btnCheckUpdate = root.findViewById(R.id.btn_check_update);
+        btnCheckUpdate = root.findViewById(R.id.btn_check_update);
         btnCheckUpdate.setOnClickListener(v -> {
             if (getActivity() == null) return;
             btnCheckUpdate.setText(R.string.more_checking);
             btnCheckUpdate.setEnabled(false);
             UpdateChecker.checkManual(getActivity());
 
-            // 3 秒后恢复按钮状态（检测会在主线程回调弹窗/Toast）
-            v.postDelayed(() -> {
-                btnCheckUpdate.setText(R.string.more_check_update);
-                btnCheckUpdate.setEnabled(true);
-            }, 3000);
+            // 3 秒后兜底恢复按钮（检测结束会在主线程回调弹窗/Toast）
+            // 切走页面时由 onDestroyView 移除回调，避免持有视图树泄漏（M7）
+            v.postDelayed(restoreBtn, 3000);
         });
 
         // QQ 号长按复制
@@ -84,6 +107,16 @@ public class MoreFragment extends Fragment {
         btnDonate.setOnClickListener(v -> showDonateDialog());
 
         return root;
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        // M7 修复：移除挂起的按钮恢复回调，避免泄漏整个视图树
+        if (btnCheckUpdate != null) {
+            btnCheckUpdate.removeCallbacks(restoreBtn);
+        }
+        btnCheckUpdate = null;
     }
 
     /**
@@ -127,8 +160,27 @@ public class MoreFragment extends Fragment {
 
     /**
      * 将 ImageView 中的二维码 Bitmap 保存到系统相册。
+     * pre-Q（Android 9 及以下）需先请求 WRITE_EXTERNAL_STORAGE 运行时权限（M8 修复）。
      */
     private void saveQrToGallery(ImageView ivQr) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            // Android 9 及以下需要 WRITE_EXTERNAL_STORAGE 运行时权限
+            // （M8 修复：此前只检查权限却从不请求，新装 App 保存必失败）
+            if (ContextCompat.checkSelfPermission(requireContext(),
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ivQrPending = new WeakReference<>(ivQr);
+                storagePermLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                return;
+            }
+        }
+        doSaveQrToGallery(ivQr);
+    }
+
+    /**
+     * 实际执行保存（已确保有权限或运行在 Android 10+）。
+     */
+    private void doSaveQrToGallery(ImageView ivQr) {
         if (ivQr.getDrawable() == null) return;
         Bitmap bitmap;
         try {

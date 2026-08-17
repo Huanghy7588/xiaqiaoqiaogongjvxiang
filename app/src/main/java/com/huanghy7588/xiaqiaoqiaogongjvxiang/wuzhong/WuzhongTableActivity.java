@@ -1,8 +1,10 @@
 package com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ContentValues;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
@@ -25,6 +27,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.annotation.NonNull;
+
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 
 import java.io.File;
@@ -35,6 +41,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 无中生有表格：首页入口。
@@ -47,6 +55,15 @@ public class WuzhongTableActivity extends Activity {
     private final List<PersonData> persons = new ArrayList<>();
     private LinearLayout personContainer;
     private Button btnModeRank, btnModeFun;
+
+    /** 后台渲染/保存用的单线程池（S5 修复：2500px 大图渲染移出主线程） */
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    /** 当前内嵌预览缩略图（S6 修复：替换时回收旧 Bitmap） */
+    private Bitmap lastThumb;
+    /** 存储权限请求码 */
+    private static final int REQ_STORAGE = 2001;
+    /** 权限授予后要执行的保存动作（S4 修复：pre-Q 需要运行时请求存储权限） */
+    private Runnable pendingStorageAction;
 
     /** 带圈序号，按模式内顺序动态编号（1 开始连续） */
     private static final String[] CIRCLED = {"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"};
@@ -75,7 +92,7 @@ public class WuzhongTableActivity extends Activity {
         });
 
         findViewById(R.id.btn_export).setOnClickListener(v -> exportTable());
-        findViewById(R.id.btn_preview).setOnClickListener(v -> openPreview());
+        findViewById(R.id.preview_thumb).setOnClickListener(v -> openPreview());
 
         // 默认一个人物（左一）
         persons.add(new PersonData());
@@ -94,6 +111,25 @@ public class WuzhongTableActivity extends Activity {
         personContainer.removeAllViews();
         for (int i = 0; i < persons.size(); i++) {
             personContainer.addView(buildPersonCard(persons.get(i), i));
+        }
+        updatePreviewThumb();
+    }
+
+    /** 顶部内嵌实时预览：小宽度渲染省内存，内容变化即刻可见 */
+    private void updatePreviewThumb() {
+        ImageView thumb = findViewById(R.id.preview_thumb);
+        if (thumb == null) return;
+        try {
+            Bitmap b = new TableRenderer(this).render(persons, mode, 1000);
+            if (b != null) {
+                // S6 修复：先回收旧缩略图，避免反复操作内存暴涨
+                Bitmap old = lastThumb;
+                thumb.setImageBitmap(b);
+                lastThumb = b;
+                if (old != null && !old.isRecycled()) old.recycle();
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
         }
     }
 
@@ -137,11 +173,41 @@ public class WuzhongTableActivity extends Activity {
         card.addView(sectionTitle(sec, "蓝方/红方"));
         card.addView(choiceButtons(new String[]{"蓝方", "红方"}, p.side, i -> { p.side = i; renderPersons(); }));
 
-        // ② 英雄/皮肤 + ID名
+        // 色卡（高饱和/低饱和）
+        card.addView(sectionTitle(sec, "色卡"));
+        card.addView(choiceButtons(new String[]{"高饱和", "低饱和"}, p.colorCard, i -> { p.colorCard = i; renderPersons(); }));
+        TextView tip = subTitle("高饱和更加好看；低饱和还原局内");
+        tip.setTextColor(Color.parseColor("#F57F17"));
+        card.addView(tip);
+
+        // ② 英雄/皮肤 + ID名 + ID条
         card.addView(sectionTitle(sec, "英雄、皮肤"));
+        TextView heroTip = subTitle("蓝方：英雄/皮肤选 蓝色 或 金色\n红方：英雄/皮肤选 红色 或 金色\n（英雄与皮肤同色）");
+        heroTip.setTextColor(Color.parseColor("#F57F17"));
+        card.addView(heroTip);
         card.addView(makeEdit("请输入英雄、皮肤", p.heroSkin, s -> p.heroSkin = s));
         card.addView(sectionTitle("ID名"));
         card.addView(makeEdit("请输入ID名", p.idName, s -> p.idName = s));
+
+        // 是否需要 ID 条：左一选"是"(idBar=1) → 其他人强制"否"并锁定；左一未选/选"否" → 其他人可自由选择
+        boolean idBarBlocked = idx > 0 && persons.get(0).idBar == 1;
+        if (idBarBlocked) p.idBar = 0;
+        card.addView(subTitle("是否需要 ID 条？"));
+        card.addView(choiceButtons(new String[]{"是", "否"},
+                p.idBar == 1 ? 0 : (p.idBar == 0 ? 1 : -1),
+                i -> {
+                    p.idBar = (i == 0) ? 1 : 0;
+                    // W1 修复：左一从"是"改回"否"时，其他人被强制清成的 idBar 恢复为未选(-1)
+                    if (idx == 0 && p.idBar == 0) {
+                        for (int k = 1; k < persons.size(); k++) persons.get(k).idBar = -1;
+                    }
+                    renderPersons();
+                }));
+        if (idBarBlocked) {
+            TextView lock = subTitle("左一已有 ID 条，其他人不能再选");
+            lock.setTextColor(Color.parseColor("#BDBDBD"));
+            card.addView(lock);
+        }
 
         // ③ 熟练度/标
         card.addView(sectionTitle(sec, "熟练度 / 标"));
@@ -154,9 +220,16 @@ public class WuzhongTableActivity extends Activity {
             card.addView(subTitle("发光 / 不发光"));
             card.addView(choiceButtons(new String[]{"发光", "不发光"}, p.badgeGlow, i -> { p.badgeGlow = i; renderPersons(); }));
             card.addView(subTitle("标等级"));
-            card.addView(choiceButtons(PersonData.BADGE_LEVEL, p.badgeLevel, i -> { p.badgeLevel = i; renderPersons(); }));
-            card.addView(subTitle("50强 / 100强 / 数字标"));
-            card.addView(makeEdit("如：50强 / 100强 / 数字", p.badgeNum, s -> p.badgeNum = s));
+            card.addView(choiceButtons(PersonData.BADGE_LEVEL, p.badgeLevel, i -> {
+                p.badgeLevel = i;
+                // W2 修复：选中国标(4)时清空 badgeNum，避免切回非国标时旧"50强"重新出现
+                if (i == 4) p.badgeNum = "";
+                renderPersons();
+            }));
+            if (p.badgeLevel != 4) { // 国标不带 50强/100强/数字标
+                card.addView(subTitle("50强 / 100强 / 数字标"));
+                card.addView(makeEdit("如：50强 / 100强 / 数字", p.badgeNum, s -> p.badgeNum = s));
+            }
         }
 
         // ④ 框
@@ -176,6 +249,9 @@ public class WuzhongTableActivity extends Activity {
                 card.addView(choiceButtons(new String[]{"天梯排名", "巅峰角标"}, p.frameBadgeType, i -> { p.frameBadgeType = i; renderPersons(); }));
                 if (p.frameBadgeType == 0) {
                     card.addView(subTitle("天梯排名"));
+                    card.addView(imageGrid(PersonData.F_TRANSLATION_LADDER,
+                            p.ladderImage >= 0 ? PersonData.F_TRANSLATION_LADDER + "/" + (p.ladderImage + 1) + ".jpg" : null,
+                            null, path -> p.ladderImage = parseIndex(path)));
                     card.addView(makeEdit("请输入天梯排名", p.ladderRank, s -> p.ladderRank = s));
                 } else if (p.frameBadgeType == 1) {
                     card.addView(subTitle("巅峰角标版本"));
@@ -219,11 +295,18 @@ public class WuzhongTableActivity extends Activity {
             card.addView(makeEdit("请输入等级", p.relationLevel, s -> p.relationLevel = s));
         }
 
-        // ⑦ 召唤师技能
+        // ⑦ 召唤师技能：技能全部用图片选择，另保留"其他"文字
         card.addView(sectionTitle(sec, "召唤师技能"));
-        card.addView(choiceButtons(PersonData.SUMMONER, p.summonerSkill, i -> { p.summonerSkill = i; renderPersons(); }));
-        if (p.summonerSkill == 11) {
-            card.addView(subTitle("其他技能"));
+        if (p.summonerOtherMode) p.summonerImage = null;
+        card.addView(imageGrid(PersonData.F_SKILL, p.summonerImage, null, path -> {
+            p.summonerImage = path;
+            p.summonerOtherMode = false;
+            renderPersons();
+        }));
+        card.addView(subTitle("或选择其他技能"));
+        card.addView(choiceButtons(new String[]{"其他"}, p.summonerOtherMode ? 0 : -1,
+                i -> { p.summonerOtherMode = true; p.summonerImage = null; renderPersons(); }));
+        if (p.summonerOtherMode) {
             card.addView(makeEdit("请输入其他技能", p.summonerOther, s -> p.summonerOther = s));
         }
 
@@ -265,19 +348,39 @@ public class WuzhongTableActivity extends Activity {
         return card;
     }
 
-    /** 序号节标题：带圈数字自动连续递增 */
+    /** 序号节标题：带圈数字自动连续递增；相邻大项交替配色，视觉上明显分段 */
     private TextView sectionTitle(int[] counter, String text) {
         int n = counter[0]++;
         String prefix = (n < CIRCLED.length) ? CIRCLED[n] : (n + 1) + ".";
-        return sectionTitle(prefix + " " + text);
+        TextView tv = new TextView(this);
+        tv.setText(prefix + " " + text);
+        tv.setTextSize(15);
+        tv.setTypeface(null, android.graphics.Typeface.BOLD);
+        // 偶数项浅绿底深绿字，奇数项浅蓝底深蓝字，交替不重样
+        GradientDrawable bg = new GradientDrawable();
+        bg.setCornerRadius(dp(6));
+        if (n % 2 == 0) {
+            bg.setColor(Color.parseColor("#E8F5E9"));
+            tv.setTextColor(Color.parseColor("#1B5E20"));
+        } else {
+            bg.setColor(Color.parseColor("#E3F2FD"));
+            tv.setTextColor(Color.parseColor("#0D47A1"));
+        }
+        tv.setBackground(bg);
+        tv.setPadding(dp(10), dp(8), dp(10), dp(8));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.setMargins(0, dp(14), 0, dp(6));
+        tv.setLayoutParams(lp);
+        return tv;
     }
 
-    /** 普通节标题（无序号） */
+    /** 普通节标题（无序号，用于 ID名 / 选填项等附属区块） */
     private TextView sectionTitle(String text) {
         TextView tv = new TextView(this);
         tv.setText(text);
         tv.setTextSize(15);
-        tv.setTextColor(Color.parseColor("#2E7D32"));
+        tv.setTextColor(Color.parseColor("#6D4C41"));
         tv.setTypeface(null, android.graphics.Typeface.BOLD);
         tv.setPadding(0, dp(12), 0, dp(4));
         return tv;
@@ -307,7 +410,6 @@ public class WuzhongTableActivity extends Activity {
         GridLayout gl = new GridLayout(this);
         gl.setColumnCount(4);
         String[] files = listAssets(folder);
-        int col = 0;
         for (String f : files) {
             if (filter != null && !matchFilter(f, filter)) continue;
             final String path = folder + "/" + f;
@@ -348,7 +450,6 @@ public class WuzhongTableActivity extends Activity {
                 renderPersons();
             });
             gl.addView(cell);
-            col++;
         }
         return gl;
     }
@@ -376,10 +477,9 @@ public class WuzhongTableActivity extends Activity {
 
     /** 从 assets 解码图片并缩放到目标尺寸（保持比例、开启抗锯齿） */
     private Bitmap loadAssetBitmap(String path, int maxW, int maxH) {
-        try {
-            InputStream is = getAssets().open(path);
+        // W3 修复：用 try-with-resources，异常时流也关闭
+        try (InputStream is = getAssets().open(path)) {
             Bitmap b = BitmapFactory.decodeStream(is);
-            is.close();
             if (b == null) return null;
             float scale = Math.min((float) maxW / b.getWidth(), (float) maxH / b.getHeight());
             int tw = Math.max(1, Math.round(b.getWidth() * scale));
@@ -482,10 +582,13 @@ public class WuzhongTableActivity extends Activity {
     }
 
     private void styleBtn(Button b, boolean sel) {
+        // 清除 XML 里的 backgroundTint，否则新背景会被 tint 染色，选中/未选看不出变化
+        b.setBackgroundTintList(null);
         GradientDrawable gd = new GradientDrawable();
         gd.setCornerRadius(dp(8));
         if (sel) {
             gd.setColor(Color.parseColor("#4CAF50"));
+            gd.setStroke(dp(2), Color.parseColor("#2E7D32"));
             b.setTextColor(Color.WHITE);
         } else {
             gd.setColor(Color.parseColor("#ECEFF1"));
@@ -519,27 +622,51 @@ public class WuzhongTableActivity extends Activity {
             Toast.makeText(this, "请先添加人物", Toast.LENGTH_SHORT).show();
             return;
         }
-        Bitmap bmp = new TableRenderer(this).render(persons, mode);
+        Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
+        // S5 修复：2500px 大图渲染移出主线程，避免 ANR
+        executor.execute(() -> {
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 2500);
+            runOnUiThread(() -> showPreviewDialog(bmp));
+        });
+    }
+
+    private void showPreviewDialog(Bitmap bmp) {
         if (bmp == null) {
             Toast.makeText(this, "生成失败", Toast.LENGTH_SHORT).show();
             return;
         }
-
         final Dialog dlg = new Dialog(this);
         dlg.setContentView(R.layout.dialog_wuzhong_preview);
         ZoomImageView zoom = dlg.findViewById(R.id.zoom_view);
         zoom.setBitmap(bmp);
         dlg.findViewById(R.id.btn_preview_close).setOnClickListener(v -> dlg.dismiss());
-        dlg.findViewById(R.id.btn_preview_save).setOnClickListener(v -> {
-            saveToGallery(bmp);
-            dlg.dismiss();
+        final boolean[] saving = {false};
+        dlg.findViewById(R.id.btn_preview_save).setOnClickListener(v ->
+                // S4 修复：pre-Q 需先取得存储权限再保存
+                ensureStoragePermissionThen(() -> {
+                    saving[0] = true;
+                    executor.execute(() -> {
+                        boolean ok = saveToGallery(bmp);
+                        if (!bmp.isRecycled()) bmp.recycle(); // S6 修复
+                        boolean saved = ok;
+                        runOnUiThread(() -> {
+                            Toast.makeText(this,
+                                    saved ? "已保存到相册（图片/夏乔乔工具箱）" : "保存失败",
+                                    Toast.LENGTH_SHORT).show();
+                            dlg.dismiss();
+                        });
+                    });
+                }));
+        // S6 修复：关闭弹窗时回收大图（保存中由保存线程回收，避免竞争）
+        dlg.setOnDismissListener(d -> {
+            if (!saving[0] && bmp != null && !bmp.isRecycled()) bmp.recycle();
         });
+        dlg.show();
         android.view.Window w = dlg.getWindow();
         if (w != null) {
             w.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
             w.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.BLACK));
         }
-        dlg.show();
     }
 
     // ====================== 导出 ======================
@@ -549,16 +676,68 @@ public class WuzhongTableActivity extends Activity {
             Toast.makeText(this, "请先添加人物", Toast.LENGTH_SHORT).show();
             return;
         }
-        Bitmap bmp = new TableRenderer(this).render(persons, mode);
-        if (bmp == null) {
-            Toast.makeText(this, "生成失败", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        saveToGallery(bmp);
+        // S4 修复：pre-Q 需先取得存储权限；授权后再渲染+保存
+        ensureStoragePermissionThen(this::doExport);
     }
 
-    private void saveToGallery(Bitmap bmp) {
+    private void doExport() {
+        Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
+        // S5 修复：2500px 大图渲染 + PNG 压缩移出主线程，避免 ANR
+        executor.execute(() -> {
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 2500);
+            if (bmp == null) {
+                runOnUiThread(() -> Toast.makeText(this, "生成失败", Toast.LENGTH_SHORT).show());
+                return;
+            }
+            boolean ok = saveToGallery(bmp);
+            if (!bmp.isRecycled()) bmp.recycle(); // S6 修复
+            boolean saved = ok;
+            runOnUiThread(() -> Toast.makeText(this,
+                    saved ? "已保存到相册（图片/夏乔乔工具箱）" : "保存失败",
+                    Toast.LENGTH_LONG).show());
+        });
+    }
+
+    /** S4 修复：pre-Q 需要 WRITE_EXTERNAL_STORAGE 运行时权限；Q+ 无需请求直接执行 */
+    private void ensureStoragePermissionThen(Runnable action) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q
+                && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            pendingStorageAction = action;
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQ_STORAGE);
+            Toast.makeText(this, "需要存储权限以保存图片", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        action.run();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_STORAGE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                    && pendingStorageAction != null) {
+                Runnable act = pendingStorageAction;
+                pendingStorageAction = null;
+                act.run();
+            } else {
+                pendingStorageAction = null;
+                Toast.makeText(this, "未授权存储权限，无法保存图片", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    /**
+     * 保存 Bitmap 到相册 Pictures/夏乔乔工具箱。
+     * 调用方需保证 pre-Q 已获得 WRITE_EXTERNAL_STORAGE 权限（见 ensureStoragePermissionThen）。
+     * 返回 true 表示成功（不再内部弹 Toast，由调用方在主线程提示）。
+     */
+    private boolean saveToGallery(Bitmap bmp) {
         String name = "wuzhong_" + System.currentTimeMillis() + ".png";
+        // Android 10+ 用 IS_PENDING 标记：写入完成后相册才可见，失败则删除记录，避免相册留下灰色空图
+        Uri pendingUri = null;
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ContentValues v = new ContentValues();
@@ -566,27 +745,56 @@ public class WuzhongTableActivity extends Activity {
                 v.put(MediaStore.Images.Media.MIME_TYPE, "image/png");
                 v.put(MediaStore.Images.Media.RELATIVE_PATH,
                         Environment.DIRECTORY_PICTURES + "/夏乔乔工具箱");
-                Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
-                if (uri != null) {
-                    try (OutputStream os = getContentResolver().openOutputStream(uri)) {
-                        bmp.compress(Bitmap.CompressFormat.PNG, 100, os);
+                v.put(MediaStore.Images.Media.IS_PENDING, 1);
+                pendingUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, v);
+                if (pendingUri == null) throw new IOException("相册写入位置创建失败");
+                try (OutputStream os = getContentResolver().openOutputStream(pendingUri)) {
+                    if (os == null || !bmp.compress(Bitmap.CompressFormat.PNG, 100, os)) {
+                        throw new IOException("图片数据写入失败");
                     }
+                }
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.Images.Media.IS_PENDING, 0);
+                // W4 修复：校验 IS_PENDING 更新返回值，失败则删除记录避免灰色空图
+                int updated = getContentResolver().update(pendingUri, done, null, null);
+                if (updated == 0) {
+                    getContentResolver().delete(pendingUri, null, null);
+                    throw new IOException("IS_PENDING 清除失败");
                 }
             } else {
                 File dir = new File(Environment.getExternalStoragePublicDirectory(
                         Environment.DIRECTORY_PICTURES), "夏乔乔工具箱");
-                dir.mkdirs();
+                if (!dir.exists() && !dir.mkdirs()) throw new IOException("目录创建失败");
                 File f = new File(dir, name);
+                boolean ok;
                 try (FileOutputStream fos = new FileOutputStream(f)) {
-                    bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                    ok = bmp.compress(Bitmap.CompressFormat.PNG, 100, fos);
+                }
+                if (!ok) {
+                    f.delete();
+                    throw new IOException("图片数据写入失败");
                 }
                 sendBroadcast(new android.content.Intent(
                         android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(f)));
             }
-            Toast.makeText(this, "已保存到相册（图片/夏乔乔工具箱）", Toast.LENGTH_LONG).show();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
-            Toast.makeText(this, "保存失败：" + e.getMessage(), Toast.LENGTH_LONG).show();
+            if (pendingUri != null) {
+                try { getContentResolver().delete(pendingUri, null, null); } catch (Exception ignore) {}
+            }
+            return false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // S6 修复：回收缩略图、关闭后台线程池
+        executor.shutdown();
+        if (lastThumb != null && !lastThumb.isRecycled()) {
+            lastThumb.recycle();
+            lastThumb = null;
         }
     }
 }

@@ -17,6 +17,8 @@ public class PersonData {
     public static final String F_PASS_DOWN = "photo/pass_down";
     public static final String F_ROLE_TIER = "photo/role_tier";
     public static final String F_LANE_RANKING = "photo/lane_ranking";
+    public static final String F_TRANSLATION_LADDER = "photo/translation_ladder";
+    public static final String F_SKILL = "photo/skill";
 
     /** 模式 */
     public static final int MODE_RANK = 0; // 排位
@@ -25,9 +27,13 @@ public class PersonData {
     /** ① 蓝方/红方 */
     public int side = -1; // 0 蓝方, 1 红方
 
-    /** ② 英雄/皮肤、ID名 */
+    /** 色卡（蓝红方与英雄皮肤之间） */
+    public int colorCard = -1; // 0 高饱和, 1 低饱和
+
+    /** ② 英雄/皮肤、ID名、ID条 */
     public String heroSkin = "";
     public String idName = "";
+    public int idBar = -1; // -1 未选, 0 无, 1 有（仅第一个选"有"后其他人不可选）
 
     /** ③ 熟练度/标 */
     public int profMode = -1; // 0 熟练度, 1 标
@@ -43,6 +49,7 @@ public class PersonData {
     public int frameBadge = -1; // -1 未选, 0 是(有角标), 1 否(无角标)
     public int frameBadgeType = -1; // 0 天梯排名, 1 巅峰角标（frameBadge==0 时）
     public String ladderRank = ""; // 天梯排名文本
+    public int ladderImage = -1; // 天梯排名图片索引（0-based，对应 photo/translation_ladder/1.jpg）
     public int peakBadgeVer = -1; // 0 新版, 1 旧版（巅峰角标）
     public String peakBadgeImage = null; // 巅峰角标图片（assets 路径）
     public String peakNumber = ""; // 巅峰数字（巅峰框）
@@ -58,8 +65,9 @@ public class PersonData {
     public int relationType = -1; // 0 恋人..8 开黑挚友
     public String relationLevel = "";
 
-    /** ⑧ 召唤师技能 */
-    public int summonerSkill = -1; // 0..11
+    /** ⑧ 召唤师技能：图片选择（photo/skill），另保留"其他"文字 */
+    public String summonerImage = null; // 技能图片 assets 路径
+    public boolean summonerOtherMode = false; // 是否选择了"其他"
     public String summonerOther = "";
 
     /** ⑨ 加载进度（娱乐模式） */
@@ -102,8 +110,6 @@ public class PersonData {
             "星耀", "王者", "无双", "荣耀", "百星"};
     public static final String[] NOBLE = {"V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "传承标"};
     public static final String[] RELATION = {"恋人", "闺蜜", "姐妹", "基友", "兄弟", "兄妹", "姐弟", "找搭子", "开黑挚友"};
-    public static final String[] SUMMONER = {"疾跑", "传送", "惩戒", "治疗", "终结", "狂暴",
-            "干扰", "晕眩", "净化", "弱化", "闪现", "其他"};
     public static final String[] LANE_TIER = {"对抗", "打野", "中路", "辅助", "射手"};
 
     private String s(int v, String[] arr) {
@@ -119,11 +125,14 @@ public class PersonData {
 
         // ①
         rows.add(new Row("蓝方/红方", new Cell(side == 0 ? "蓝方" : side == 1 ? "红方" : "", null)));
+        // 色卡
+        rows.add(new Row("色卡", new Cell(colorCard == 0 ? "高饱和" : colorCard == 1 ? "低饱和" : "", null)));
         // ②
         rows.add(new Row("英雄/皮肤", new Cell(heroSkin == null ? "" : heroSkin, null)));
         rows.add(new Row("ID名", new Cell(idName == null ? "" : idName, null)));
+        if (idBar == 1) rows.add(new Row("ID条", new Cell("有ID条", null)));
 
-        // ③ 熟练度/标
+        // ③ 熟练度/标（国标不带 50强/100强/数字标）
         if (profMode == 0) {
             rows.add(new Row("熟练度/标", new Cell("", profImage)));
         } else if (profMode == 1) {
@@ -131,7 +140,7 @@ public class PersonData {
             if (badgeGlow == 0) sb.append("发光");
             else if (badgeGlow == 1) sb.append("不发光");
             sb.append(s(badgeLevel, BADGE_LEVEL));
-            if (badgeNum != null && !badgeNum.isEmpty()) sb.append(badgeNum);
+            if (badgeLevel != 4 && badgeNum != null && !badgeNum.isEmpty()) sb.append(badgeNum);
             rows.add(new Row("熟练度/标", new Cell(sb.toString(), null)));
         } else {
             rows.add(new Row("熟练度/标", new Cell("", null)));
@@ -148,7 +157,10 @@ public class PersonData {
                 if (frameBadgeType == 0) sb.append("·天梯").append(ladderRank == null ? "" : ladderRank);
                 else if (frameBadgeType == 1) sb.append("·巅峰角标").append(peakBadgeVer == 0 ? "新版" : peakBadgeVer == 1 ? "旧版" : "");
             }
-            String frameImg = (frameBadge == 0 && frameBadgeType == 1) ? peakBadgeImage : null;
+            String frameImg = null;
+            if (frameBadge == 0 && frameBadgeType == 1) frameImg = peakBadgeImage;
+            else if (frameBadge == 0 && frameBadgeType == 0 && ladderImage >= 0)
+                frameImg = F_TRANSLATION_LADDER + "/" + (ladderImage + 1) + ".jpg";
             rows.add(new Row("框", new Cell(sb.toString(), frameImg)));
         } else if (frameType == 1) { // 巅峰框
             String t = "巅峰" + (peakNumber == null ? "" : peakNumber);
@@ -179,10 +191,15 @@ public class PersonData {
         }
         rows.add(new Row("亲密关系", new Cell(rel, null)));
 
-        // ⑧ 召唤师技能
-        String sk = s(summonerSkill, SUMMONER);
-        if (summonerSkill == 11 && summonerOther != null && !summonerOther.isEmpty()) sk += ":" + summonerOther;
-        rows.add(new Row("召唤师技能", new Cell(sk, null)));
+        // ⑧ 召唤师技能（图片或"其他"文字）
+        if (summonerImage != null) {
+            rows.add(new Row("召唤师技能", new Cell("", summonerImage)));
+        } else if (summonerOtherMode) {
+            String t = summonerOther == null || summonerOther.isEmpty() ? "其他" : "其他：" + summonerOther;
+            rows.add(new Row("召唤师技能", new Cell(t, null)));
+        } else {
+            rows.add(new Row("召唤师技能", new Cell("", null)));
+        }
 
         // ⑨ 加载进度（娱乐）
         if (mode == MODE_FUN) {

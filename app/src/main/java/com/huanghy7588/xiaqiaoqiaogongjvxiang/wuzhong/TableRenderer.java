@@ -21,12 +21,123 @@ import java.util.Map;
  */
 public class TableRenderer {
 
-    private static final int IMG_W = 2500;          // 固定宽
-    private static final int LABEL_W = 560;         // 项目列宽
-    private static final int HEADER_H = 120;        // 表头高
-    private static final int TEXT_ROW_H = 140;      // 纯文字行高
-    private static final int MAX_IMG_H = 420;       // 图片最大高度（放大保证看得清）
-    private static final int PAD = 16;             // 单元格内边距
+    private static final float BASE_W = 2500f;     // 基准宽（导出用 2500）
+    private static final float BASE_LABEL_W = 560f;
+    private static final float BASE_HEADER_H = 120f;
+    private static final float BASE_TEXT_ROW_H = 140f;
+    private static final float BASE_MAX_IMG_H = 420f;
+    private static final float BASE_PAD = 16f;
+
+    /** 渲染宽度由调用方指定：导出 2500，页面内嵌预览用小图省内存 */
+    public Bitmap render(List<PersonData> persons, int mode, int imgW) {
+        if (persons == null || persons.isEmpty()) return null;
+
+        final float s = imgW / BASE_W;
+        final int labelW = Math.round(BASE_LABEL_W * s);
+        final int headerH = Math.round(BASE_HEADER_H * s);
+        final int textRowH = Math.round(BASE_TEXT_ROW_H * s);
+        final int maxImgH = Math.round(BASE_MAX_IMG_H * s);
+        final int pad = Math.max(2, Math.round(BASE_PAD * s));
+
+        int n = persons.size();
+        int personW = (imgW - labelW) / n;
+
+        // 每人的行转成 label -> cell 映射（选填项每人独立，需按行标签对齐）
+        List<Map<String, PersonData.Cell>> maps = new ArrayList<>();
+        for (PersonData p : persons) {
+            Map<String, PersonData.Cell> m = new LinkedHashMap<>();
+            for (PersonData.Row r : p.computeRows(mode)) m.put(r.label, r.cell);
+            maps.add(m);
+        }
+        boolean anyIdBar = false;
+        for (PersonData p : persons) {
+            if (p.idBar == 1) { anyIdBar = true; break; }
+        }
+
+        // 统一行序列：主行（所有人一致，取第一人）+ ID条（任一人有则插在 ID名 后）+ 选填并集
+        List<String> labels = new ArrayList<>();
+        boolean firstHasIdBar = false;
+        for (PersonData.Row r : persons.get(0).computeRows(mode)) {
+            if (isOptionalLabel(r.label)) continue;
+            labels.add(r.label);
+            if (r.label.equals("ID名")) {
+                firstHasIdBar = persons.get(0).idBar == 1;
+                if (anyIdBar && !firstHasIdBar) labels.add("ID条");
+            }
+        }
+        for (String ol : PersonData.OPTIONAL_LABELS) {
+            for (Map<String, PersonData.Cell> m : maps) {
+                if (m.containsKey(ol)) { labels.add(ol); break; }
+            }
+        }
+        int rowCount = labels.size();
+
+        // 计算每行高度（图片行需更大）
+        int[] rowH = new int[rowCount];
+        for (int r = 0; r < rowCount; r++) {
+            int h = textRowH;
+            String label = labels.get(r);
+            for (int i = 0; i < n; i++) {
+                PersonData.Cell c = maps.get(i).get(label);
+                if (c != null && c.imageAsset != null) {
+                    Size sz = imgSize(c.imageAsset);
+                    if (sz != null) {
+                        float tw = personW - pad * 2;
+                        float scale = tw / sz.w;
+                        float ih = sz.h * scale;
+                        if (ih > maxImgH) {
+                            ih = maxImgH;
+                            scale = maxImgH / sz.h;
+                            tw = sz.w * scale;
+                        }
+                        h = Math.max(h, (int) ih + pad * 2
+                                + (c.text != null && !c.text.isEmpty() ? Math.round(50 * s) : 0));
+                    }
+                }
+            }
+            rowH[r] = h;
+        }
+
+        int totalH = headerH;
+        for (int h : rowH) totalH += h;
+
+        Bitmap bmp = Bitmap.createBitmap(imgW, totalH, Bitmap.Config.ARGB_8888);
+        Canvas cv = new Canvas(bmp);
+        cv.drawColor(Color.WHITE);
+
+        // 表头
+        cv.drawRect(0, 0, imgW, headerH, pHeaderBg);
+        drawCellText(cv, "项目", 0, 0, labelW, headerH, 44 * s, true, pad);
+        for (int i = 0; i < n; i++) {
+            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 44 * s, true, pad);
+        }
+        cv.drawLine(0, headerH, imgW, headerH, pLine);
+
+        // 数据行
+        int y = headerH;
+        for (int r = 0; r < rowCount; r++) {
+            int h = rowH[r];
+            String label = labels.get(r);
+            // 标签列
+            cv.drawRect(0, y, labelW, y + h, pLabelBg);
+            drawCellText(cv, label, 0, y, labelW, h, 38 * s, false, pad);
+            // 竖向分隔线
+            cv.drawLine(labelW, y, labelW, y + h, pLine);
+            // 人物列
+            for (int i = 0; i < n; i++) {
+                PersonData.Cell c = maps.get(i).get(label);
+                int cx = labelW + i * personW;
+                drawCell(cv, c, cx, y, personW, h, s, pad, maxImgH);
+                cv.drawLine(cx + personW, y, cx + personW, y + h, pLine);
+            }
+            cv.drawLine(0, y + h, imgW, y + h, pLine);
+            y += h;
+        }
+
+        // 外边框
+        cv.drawRect(1, 1, imgW - 1, totalH - 1, pLine);
+        return bmp;
+    }
 
     private final Context ctx;
     private final Paint pLine = new Paint();
@@ -49,98 +160,6 @@ public class TableRenderer {
         pBlack.setColor(Color.BLACK);
     }
 
-    public Bitmap render(List<PersonData> persons, int mode) {
-        if (persons == null || persons.isEmpty()) return null;
-
-        int n = persons.size();
-        int personW = (IMG_W - LABEL_W) / n;
-
-        // 每人的行转成 label -> cell 映射（选填项每人独立，需按行标签对齐）
-        List<Map<String, PersonData.Cell>> maps = new ArrayList<>();
-        for (PersonData p : persons) {
-            Map<String, PersonData.Cell> m = new LinkedHashMap<>();
-            for (PersonData.Row r : p.computeRows(mode)) m.put(r.label, r.cell);
-            maps.add(m);
-        }
-
-        // 统一行序列：主行（所有人一致，取第一人）+ 选填并集（任一人勾选即保留该行）
-        List<String> labels = new ArrayList<>();
-        for (PersonData.Row r : persons.get(0).computeRows(mode)) {
-            if (!isOptionalLabel(r.label)) labels.add(r.label);
-        }
-        for (String ol : PersonData.OPTIONAL_LABELS) {
-            for (Map<String, PersonData.Cell> m : maps) {
-                if (m.containsKey(ol)) { labels.add(ol); break; }
-            }
-        }
-        int rowCount = labels.size();
-
-        // 计算每行高度（图片行需更大）
-        int[] rowH = new int[rowCount];
-        for (int r = 0; r < rowCount; r++) {
-            int h = TEXT_ROW_H;
-            String label = labels.get(r);
-            for (int i = 0; i < n; i++) {
-                PersonData.Cell c = maps.get(i).get(label);
-                if (c != null && c.imageAsset != null) {
-                    Size sz = imgSize(c.imageAsset);
-                    if (sz != null) {
-                        float tw = personW - PAD * 2;
-                        float scale = tw / sz.w;
-                        float ih = sz.h * scale;
-                        if (ih > MAX_IMG_H) {
-                            ih = MAX_IMG_H;
-                            scale = MAX_IMG_H / sz.h;
-                            tw = sz.w * scale;
-                        }
-                        h = Math.max(h, (int) ih + PAD * 2 + (c.text != null && !c.text.isEmpty() ? 50 : 0));
-                    }
-                }
-            }
-            rowH[r] = h;
-        }
-
-        int totalH = HEADER_H;
-        for (int h : rowH) totalH += h;
-
-        Bitmap bmp = Bitmap.createBitmap(IMG_W, totalH, Bitmap.Config.ARGB_8888);
-        Canvas cv = new Canvas(bmp);
-        cv.drawColor(Color.WHITE);
-
-        // 表头
-        cv.drawRect(0, 0, IMG_W, HEADER_H, pHeaderBg);
-        drawCellText(cv, "项目", 0, 0, LABEL_W, HEADER_H, 44, true);
-        for (int i = 0; i < n; i++) {
-            drawCellText(cv, "左" + (i + 1), LABEL_W + i * personW, 0, personW, HEADER_H, 44, true);
-        }
-        cv.drawLine(0, HEADER_H, IMG_W, HEADER_H, pLine);
-
-        // 数据行
-        int y = HEADER_H;
-        for (int r = 0; r < rowCount; r++) {
-            int h = rowH[r];
-            String label = labels.get(r);
-            // 标签列
-            cv.drawRect(0, y, LABEL_W, y + h, pLabelBg);
-            drawCellText(cv, label, 0, y, LABEL_W, h, 38, false);
-            // 竖向分隔线
-            cv.drawLine(LABEL_W, y, LABEL_W, y + h, pLine);
-            // 人物列
-            for (int i = 0; i < n; i++) {
-                PersonData.Cell c = maps.get(i).get(label);
-                int cx = LABEL_W + i * personW;
-                drawCell(cv, c, cx, y, personW, h);
-                cv.drawLine(cx + personW, y, cx + personW, y + h, pLine);
-            }
-            cv.drawLine(0, y + h, IMG_W, y + h, pLine);
-            y += h;
-        }
-
-        // 外边框
-        cv.drawRect(1, 1, IMG_W - 1, totalH - 1, pLine);
-        return bmp;
-    }
-
     private boolean isOptionalLabel(String label) {
         for (String ol : PersonData.OPTIONAL_LABELS) {
             if (ol.equals(label)) return true;
@@ -148,23 +167,24 @@ public class TableRenderer {
         return false;
     }
 
-    private void drawCell(Canvas cv, PersonData.Cell c, int x, int y, int w, int h) {
+    private void drawCell(Canvas cv, PersonData.Cell c, int x, int y, int w, int h, float s, int pad, int maxImgH) {
         if (c == null) return;
         boolean hasImg = c.imageAsset != null;
         boolean hasText = c.text != null && !c.text.isEmpty();
+        int textZone = Math.min(Math.round(60 * s), h / 3);
         if (hasImg && hasText) {
             // 文字在上，图片在下
-            drawCellText(cv, c.text, x, y, w, Math.min(60, h / 3), 34, false);
-            drawCellImage(cv, c.imageAsset, x, y + Math.min(60, h / 3), w, h - Math.min(60, h / 3));
+            drawCellText(cv, c.text, x, y, w, textZone, 34 * s, false, pad);
+            drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH);
         } else if (hasImg) {
-            drawCellImage(cv, c.imageAsset, x, y, w, h);
+            drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH);
         } else if (hasText) {
-            drawCellText(cv, c.text, x, y, w, h, 38, false);
+            drawCellText(cv, c.text, x, y, w, h, 38 * s, false, pad);
         }
     }
 
-    private void drawCellImage(Canvas cv, String asset, int x, int y, int w, int h) {
-        Bitmap b = loadScaled(asset, w - PAD * 2, MAX_IMG_H);
+    private void drawCellImage(Canvas cv, String asset, int x, int y, int w, int h, int pad, int maxImgH) {
+        Bitmap b = loadScaled(asset, w - pad * 2, maxImgH);
         if (b == null) return;
         int dw = b.getWidth();
         int dh = b.getHeight();
@@ -174,13 +194,13 @@ public class TableRenderer {
         b.recycle();
     }
 
-    private void drawCellText(Canvas cv, String text, int x, int y, int w, int h, float size, boolean white) {
+    private void drawCellText(Canvas cv, String text, int x, int y, int w, int h, float size, boolean white, int pad) {
         if (text == null || text.isEmpty()) return;
         Paint paint = white ? pTextWhite : pText;
         paint.setTextSize(size);
         // 自适应缩放，防止文字超出列宽
-        float maxW = w - PAD * 2;
-        while (paint.measureText(text) > maxW && paint.getTextSize() > 14) {
+        float maxW = w - pad * 2;
+        while (paint.measureText(text) > maxW && paint.getTextSize() > 14 * Math.max(0.4f, size / 38f)) {
             paint.setTextSize(paint.getTextSize() - 1);
         }
         Paint.FontMetrics fm = paint.getFontMetrics();

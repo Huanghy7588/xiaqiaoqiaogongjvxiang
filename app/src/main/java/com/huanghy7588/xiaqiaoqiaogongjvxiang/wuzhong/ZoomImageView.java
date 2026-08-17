@@ -65,11 +65,13 @@ public class ZoomImageView extends View {
                 mode = MODE_DRAG;
                 break;
             case MotionEvent.ACTION_POINTER_DOWN:
-                oldDist = spacing(ev);
-                if (oldDist > 10f) {
-                    midPoint(mid, ev);
-                    mode = MODE_ZOOM;
-                    saved.set(matrix);
+                if (ev.getPointerCount() == 2) {
+                    oldDist = spacing(ev);
+                    if (oldDist > 10f) {
+                        midPoint(mid, ev);
+                        mode = MODE_ZOOM;
+                        saved.set(matrix);
+                    }
                 }
                 break;
             case MotionEvent.ACTION_MOVE:
@@ -79,18 +81,46 @@ public class ZoomImageView extends View {
                 } else if (mode == MODE_ZOOM) {
                     float nd = spacing(ev);
                     if (nd > 10f) {
+                        // S7 修复：限制缩放上下限，避免矩阵退化(图片消失)或翻转
+                        float scale = nd / oldDist;
+                        float cur = getScale();
+                        float newScale = cur * scale;
+                        if (newScale < 0.2f) scale = 0.2f / cur;
+                        else if (newScale > 5f) scale = 5f / cur;
                         matrix.set(saved);
-                        matrix.postScale(nd / oldDist, nd / oldDist, mid.x, mid.y);
+                        matrix.postScale(scale, scale, mid.x, mid.y);
                     }
                 }
                 break;
             case MotionEvent.ACTION_UP:
+                mode = MODE_NONE;
+                break;
             case MotionEvent.ACTION_POINTER_UP:
+                // S8 修复：双指中抬起一根后，剩下的一根转为拖动，无需全部抬起重按
+                if (ev.getPointerCount() == 2) {
+                    mode = MODE_DRAG;
+                    int rem = ev.getActionIndex() == 0 ? 1 : 0;
+                    if (ev.getPointerCount() > rem) {
+                        start.set(ev.getX(rem), ev.getY(rem));
+                        saved.set(matrix);
+                    }
+                } else {
+                    mode = MODE_NONE;
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL: // W11 修复：触控被打断时重置模式
                 mode = MODE_NONE;
                 break;
         }
         invalidate();
         return true;
+    }
+
+    /** 从 matrix 提取当前缩放值（用于缩放上下限判断） */
+    private float getScale() {
+        float[] values = new float[9];
+        matrix.getValues(values);
+        return values[Matrix.MSCALE_X];
     }
 
     private float spacing(MotionEvent e) {

@@ -51,17 +51,32 @@
             android:orientation="vertical"
             android:padding="12dp">
 
-        <!-- 预览表格 -->
-        <Button
-            android:id="@+id/btn_preview"
+        <!-- 实时表格预览（随填写内容自动刷新，点击看大图） -->
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            android:backgroundTint="@color/brand_primary"
-            android:text="预览表格"
-            android:textColor="@android:color/white"
-            android:textSize="17sp"
-            android:textStyle="bold" />
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="表格预览（点击看大图）"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/preview_thumb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:maxHeight="240dp"
+                android:scaleType="fitCenter"
+                android:src="@mipmap/ic_launcher" />
+        </LinearLayout>
 
             <!-- 模式选择 -->
             <TextView

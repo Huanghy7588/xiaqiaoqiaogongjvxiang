@@ -3,7 +3,7 @@
 <paths>
     <!-- 公共下载目录 -->
     <external-path name="external_download" path="Download/" />
-    <external-storage-path name="external_storage" path="." />
+    <external-path name="external_storage" path="." />
     <!-- 应用专属外部存储 -->
     <external-files-path name="external_files" path="." />
     <files-path name="internal_files" path="." />

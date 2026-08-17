@@ -19,6 +19,11 @@ import android.widget.Toast;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 
+import java.util.Locale;
+
+import java.io.File;
+import java.lang.ref.WeakReference;
+
 /**
  * APK 下载辅助类。
  *
@@ -141,31 +146,41 @@ public class ApkDownloadHelper {
      * - 失败：关闭弹窗并提示，停止轮询。
      */
     private static class ProgressPoller implements Runnable {
-        private final Context context;
+        // 全部改为弱引用，避免轮询期间持有 Activity/Dialog/View 强引用导致泄漏（U5）
+        private final WeakReference<Context> contextRef;
         private final DownloadManager dm;
         private final long downloadId;
-        private final AlertDialog dialog;
-        private final ProgressBar progressBar;
-        private final TextView tvProgress;
+        private final WeakReference<AlertDialog> dialogRef;
+        private final WeakReference<ProgressBar> progressBarRef;
+        private final WeakReference<TextView> tvProgressRef;
         private final Handler handler;
 
         ProgressPoller(Context context, DownloadManager dm, long downloadId,
                        AlertDialog dialog, ProgressBar progressBar,
                        TextView tvProgress, Handler handler) {
-            this.context = context;
+            this.contextRef = new WeakReference<>(context);
             this.dm = dm;
             this.downloadId = downloadId;
-            this.dialog = dialog;
-            this.progressBar = progressBar;
-            this.tvProgress = tvProgress;
+            this.dialogRef = new WeakReference<>(dialog);
+            this.progressBarRef = new WeakReference<>(progressBar);
+            this.tvProgressRef = new WeakReference<>(tvProgress);
             this.handler = handler;
         }
 
         @Override
         public void run() {
-            // Activity 已销毁则直接关闭弹窗停止轮询（下载仍在系统后台继续）
-            if (context instanceof Activity && ((Activity) context).isFinishing()) {
-                dismissSafely();
+            AlertDialog dialog = dialogRef.get();
+            ProgressBar progressBar = progressBarRef.get();
+            TextView tvProgress = tvProgressRef.get();
+            Context ctx = contextRef.get();
+
+            // Activity 已销毁/弹窗已回收则停止轮询（下载仍在系统后台继续）（U5）
+            if (dialog == null || progressBar == null || tvProgress == null) {
+                return;
+            }
+            if (ctx instanceof Activity
+                    && (((Activity) ctx).isFinishing() || ((Activity) ctx).isDestroyed())) {
+                dismissSafely(dialog);
                 return;
             }
 
@@ -185,7 +200,7 @@ public class ApkDownloadHelper {
                     if (status == DownloadManager.STATUS_SUCCESSFUL) {
                         progressBar.setProgress(100);
                         tvProgress.setText("下载完成");
-                        dismissSafely();
+                        dismissSafely(dialog);
                         return; // 安装界面由 ApkInstallReceiver 拉起
                     }
                     if (status == DownloadManager.STATUS_FAILED) {
@@ -222,9 +237,9 @@ public class ApkDownloadHelper {
         }
 
         /** 安全关闭弹窗（可能已随 Activity 销毁） */
-        private void dismissSafely() {
+        private void dismissSafely(AlertDialog dialog) {
             try {
-                if (dialog.isShowing()) dialog.dismiss();
+                if (dialog != null && dialog.isShowing()) dialog.dismiss();
             } catch (Exception ignored) {
             }
         }
@@ -233,8 +248,8 @@ public class ApkDownloadHelper {
     /** 把字节数格式化为可读字符串（如 1.2 MB） */
     private static String formatSize(long bytes) {
         if (bytes < 1024) return bytes + " B";
-        if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
-        return String.format("%.1f MB", bytes / 1024.0 / 1024.0);
+        if (bytes < 1024 * 1024) return String.format(Locale.US, "%.1f KB", bytes / 1024.0);
+        return String.format(Locale.US, "%.1f MB", bytes / 1024.0 / 1024.0);
     }
 
     /**
@@ -248,6 +263,13 @@ public class ApkDownloadHelper {
     /**
      * 通过下载 ID 获取已下载文件的本地路径。
      * @return 文件路径，如果未找到返回 null
+     */
+    /**
+     * 获取已下载文件的本地路径。
+     * 下载目标目录是我们显式指定的 Download/app-release.apk，
+     * 因此直接返回该固定路径，避免依赖 COLUMN_LOCAL_URI
+     * （某些设备会返回 content:// 导致 uri.getPath() 无效，见 U15）。
+     * @return 文件路径，如果下载未完成返回 null
      */
     public static String getDownloadedFilePath(Context context, long downloadId) {
         DownloadManager dm = (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
@@ -263,12 +285,10 @@ public class ApkDownloadHelper {
                 int status = cursor.getInt(cursor.getColumnIndexOrThrow(
                         DownloadManager.COLUMN_STATUS));
                 if (status == DownloadManager.STATUS_SUCCESSFUL) {
-                    String localUri = cursor.getString(cursor.getColumnIndexOrThrow(
-                            DownloadManager.COLUMN_LOCAL_URI));
-                    if (localUri != null) {
-                        Uri uri = Uri.parse(localUri);
-                        return uri.getPath();
-                    }
+                    // 使用我们显式设置的下载目的地，规避 content:// 解析问题（U15）
+                    File file = new File(Environment.getExternalStoragePublicDirectory(
+                            Environment.DIRECTORY_DOWNLOADS), APK_FILE_NAME);
+                    return file.getAbsolutePath();
                 }
             }
         } finally {
