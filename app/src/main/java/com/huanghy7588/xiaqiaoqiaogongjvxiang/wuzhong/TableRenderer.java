@@ -11,6 +11,7 @@ import android.graphics.Rect;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,11 +43,15 @@ public class TableRenderer {
         int n = persons.size();
         int personW = (imgW - labelW) / n;
 
+        // W7 修复：computeRows 只调用 N 次（此前 2N 次），缓存行列表供后续复用
+        List<List<PersonData.Row>> allRows = new ArrayList<>();
         // 每人的行转成 label -> cell 映射（选填项每人独立，需按行标签对齐）
         List<Map<String, PersonData.Cell>> maps = new ArrayList<>();
         for (PersonData p : persons) {
+            List<PersonData.Row> rows = p.computeRows(mode);
+            allRows.add(rows);
             Map<String, PersonData.Cell> m = new LinkedHashMap<>();
-            for (PersonData.Row r : p.computeRows(mode)) m.put(r.label, r.cell);
+            for (PersonData.Row r : rows) m.put(r.label, r.cell);
             maps.add(m);
         }
         boolean anyIdBar = false;
@@ -57,7 +62,7 @@ public class TableRenderer {
         // 统一行序列：主行（所有人一致，取第一人）+ ID条（任一人有则插在 ID名 后）+ 选填并集
         List<String> labels = new ArrayList<>();
         boolean firstHasIdBar = false;
-        for (PersonData.Row r : persons.get(0).computeRows(mode)) {
+        for (PersonData.Row r : allRows.get(0)) {
             if (isOptionalLabel(r.label)) continue;
             labels.add(r.label);
             if (r.label.equals("ID名")) {
@@ -113,6 +118,9 @@ public class TableRenderer {
         }
         cv.drawLine(0, headerH, imgW, headerH, pLine);
 
+        // W8 修复：渲染期间缓存已解码的 asset Bitmap，同一图片不重复解码
+        Map<String, Bitmap> assetCache = new HashMap<>();
+
         // 数据行
         int y = headerH;
         for (int r = 0; r < rowCount; r++) {
@@ -127,15 +135,24 @@ public class TableRenderer {
             for (int i = 0; i < n; i++) {
                 PersonData.Cell c = maps.get(i).get(label);
                 int cx = labelW + i * personW;
-                drawCell(cv, c, cx, y, personW, h, s, pad, maxImgH);
+                drawCell(cv, c, cx, y, personW, h, s, pad, maxImgH, assetCache);
                 cv.drawLine(cx + personW, y, cx + personW, y + h, pLine);
             }
             cv.drawLine(0, y + h, imgW, y + h, pLine);
             y += h;
         }
 
-        // 外边框
-        cv.drawRect(1, 1, imgW - 1, totalH - 1, pLine);
+        // W10 修复：外边框用 stroke 模式，线宽 3px，大图上清晰可见
+        pLine.setStyle(android.graphics.Paint.Style.STROKE);
+        cv.drawRect(1.5f, 1.5f, imgW - 1.5f, totalH - 1.5f, pLine);
+        pLine.setStyle(android.graphics.Paint.Style.FILL);
+
+        // W8 修复：渲染结束统一回收缓存中的 Bitmap
+        for (Bitmap b : assetCache.values()) {
+            if (b != null && !b.isRecycled()) b.recycle();
+        }
+        assetCache.clear();
+
         return bmp;
     }
 
@@ -167,7 +184,8 @@ public class TableRenderer {
         return false;
     }
 
-    private void drawCell(Canvas cv, PersonData.Cell c, int x, int y, int w, int h, float s, int pad, int maxImgH) {
+    private void drawCell(Canvas cv, PersonData.Cell c, int x, int y, int w, int h, float s, int pad, int maxImgH,
+                          Map<String, Bitmap> assetCache) {
         if (c == null) return;
         boolean hasImg = c.imageAsset != null;
         boolean hasText = c.text != null && !c.text.isEmpty();
@@ -175,23 +193,28 @@ public class TableRenderer {
         if (hasImg && hasText) {
             // 文字在上，图片在下
             drawCellText(cv, c.text, x, y, w, textZone, 34 * s, false, pad);
-            drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH);
+            drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH, assetCache);
         } else if (hasImg) {
-            drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH);
+            drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH, assetCache);
         } else if (hasText) {
             drawCellText(cv, c.text, x, y, w, h, 38 * s, false, pad);
         }
     }
 
-    private void drawCellImage(Canvas cv, String asset, int x, int y, int w, int h, int pad, int maxImgH) {
-        Bitmap b = loadScaled(asset, w - pad * 2, maxImgH);
-        if (b == null) return;
+    private void drawCellImage(Canvas cv, String asset, int x, int y, int w, int h, int pad, int maxImgH,
+                               Map<String, Bitmap> assetCache) {
+        // W8 修复：先查缓存，命中则直接用，不再重复解码
+        Bitmap b = assetCache.get(asset);
+        if (b == null) {
+            b = loadScaled(asset, w - pad * 2, maxImgH);
+            if (b == null) return;
+            assetCache.put(asset, b);
+        }
         int dw = b.getWidth();
         int dh = b.getHeight();
         int dx = x + (w - dw) / 2;
         int dy = y + (h - dh) / 2;
         cv.drawBitmap(b, dx, dy, null);
-        b.recycle();
     }
 
     private void drawCellText(Canvas cv, String text, int x, int y, int w, int h, float size, boolean white, int pad) {
@@ -209,12 +232,11 @@ public class TableRenderer {
     }
 
     private Size imgSize(String asset) {
-        try {
-            InputStream is = ctx.getAssets().open(asset);
+        // W3 修复：用 try-with-resources 确保流关闭
+        try (InputStream is = ctx.getAssets().open(asset)) {
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
             BitmapFactory.decodeStream(is, null, o);
-            is.close();
             if (o.outWidth > 0 && o.outHeight > 0) return new Size(o.outWidth, o.outHeight);
         } catch (IOException e) {
             e.printStackTrace();
@@ -223,19 +245,21 @@ public class TableRenderer {
     }
 
     private Bitmap loadScaled(String asset, int maxW, int maxH) {
+        // W3 修复：用 try-with-resources 确保两个流都关闭
         try {
             BitmapFactory.Options o = new BitmapFactory.Options();
             o.inJustDecodeBounds = true;
-            InputStream is0 = ctx.getAssets().open(asset);
-            BitmapFactory.decodeStream(is0, null, o);
-            is0.close();
+            try (InputStream is0 = ctx.getAssets().open(asset)) {
+                BitmapFactory.decodeStream(is0, null, o);
+            }
             int sample = 1;
             while (o.outWidth / sample > maxW * 2 || o.outHeight / sample > maxH * 2) sample *= 2;
             o.inJustDecodeBounds = false;
             o.inSampleSize = sample;
-            InputStream is1 = ctx.getAssets().open(asset);
-            Bitmap b = BitmapFactory.decodeStream(is1, null, o);
-            is1.close();
+            Bitmap b;
+            try (InputStream is1 = ctx.getAssets().open(asset)) {
+                b = BitmapFactory.decodeStream(is1, null, o);
+            }
             if (b == null) return null;
             // 缩放到适配框
             float scale = Math.min((float) maxW / b.getWidth(), (float) maxH / b.getHeight());

@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
@@ -67,6 +69,21 @@ public class UpdateChecker {
     /** 防止同一 Activity 并发检测 */
     private static final Map<Integer, Boolean> checkingMap = new ConcurrentHashMap<>();
 
+    /** U4 修复：手动检测完成回调，供调用方恢复 UI 状态 */
+    public interface OnCheckCompleteListener {
+        void onCheckComplete();
+    }
+
+    /** 当前注册的回调（仅手动检测时使用） */
+    private static volatile OnCheckCompleteListener checkListener;
+
+    /**
+     * 注册手动检测完成回调。
+     */
+    public static void setOnCheckCompleteListener(OnCheckCompleteListener listener) {
+        checkListener = listener;
+    }
+
     // ==================== 公开方法 ====================
 
     /**
@@ -104,6 +121,16 @@ public class UpdateChecker {
     private static void doCheck(@NonNull final Activity activity, boolean isManual) {
         int key = System.identityHashCode(activity);
         if (checkingMap.containsKey(key)) return; // 该 Activity 已有检测进行中
+
+        // U11 修复：发起请求前先检查网络连接状态，无网络时直接返回
+        if (!isNetworkAvailable(activity)) {
+            if (isManual) {
+                toast(activity, "检测失败，请检查网络");
+                notifyCheckComplete();
+            }
+            return;
+        }
+
         checkingMap.put(key, true);
 
         final boolean manual = isManual;
@@ -123,6 +150,7 @@ public class UpdateChecker {
                     if (manual && act != null && !act.isFinishing() && !act.isDestroyed()) {
                         toast(act, "检测失败，请检查网络");
                     }
+                    notifyCheckComplete();
                     return;
                 }
                 // 检测成功才记录时间（U1）：失败不节流，避免无网络时被 24h 屏蔽
@@ -130,8 +158,12 @@ public class UpdateChecker {
                         .edit()
                         .putLong(KEY_LAST_CHECK_TIME, System.currentTimeMillis())
                         .apply();
-                if (act == null || act.isFinishing() || act.isDestroyed()) return;
+                if (act == null || act.isFinishing() || act.isDestroyed()) {
+                    notifyCheckComplete();
+                    return;
+                }
                 showAnnouncementThenUpdate(act, model, manual);
+                notifyCheckComplete();
             });
         }).start();
     }
@@ -197,20 +229,11 @@ public class UpdateChecker {
         }
     }
 
-    /** 显示更新对话框 */
+    /** 显示更新对话框（U3 修复：简洁提示，仅显示版本号+是否更新） */
     private static void showUpdateDialog(Activity activity, UpdateModel.UpdateInfo info) {
         if (activity.isFinishing()) return;
 
-        String curVer = getLocalVersionName(activity);
-        StringBuilder sb = new StringBuilder();
-        sb.append("当前版本：").append(curVer).append("\n");
-        sb.append("最新版本：").append(info.versionName).append("\n\n");
-        if (info.updateLog != null && !info.updateLog.isEmpty()) {
-            sb.append(info.updateLog);
-        } else {
-            sb.append("新版本：").append(info.versionName);
-        }
-        String message = sb.toString();
+        String message = "发现了新版本 v" + info.versionName + "，是否更新？";
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity)
                 .setTitle(R.string.update_title)
@@ -274,6 +297,28 @@ public class UpdateChecker {
         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 
+    /** U11 修复：检查网络是否可用，避免无网络时发起最多 6 次请求（120 秒） */
+    private static boolean isNetworkAvailable(Context context) {
+        try {
+            ConnectivityManager cm = (ConnectivityManager)
+                    context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (cm == null) return true; // 无法判断时放行，让请求自行失败
+            NetworkInfo info = cm.getActiveNetworkInfo();
+            return info != null && info.isConnected();
+        } catch (Exception e) {
+            return true; // 异常时放行
+        }
+    }
+
+    /** U4 修复：通知监听器检测已完成 */
+    private static void notifyCheckComplete() {
+        if (checkListener != null) {
+            OnCheckCompleteListener l = checkListener;
+            checkListener = null;
+            l.onCheckComplete();
+        }
+    }
+
     /** 请求 JSON */
     private static String fetchJson(String urlStr) throws Exception {
         HttpURLConnection conn = null;
@@ -285,6 +330,8 @@ public class UpdateChecker {
             conn.setReadTimeout(10000);
             conn.setRequestMethod("GET");
             conn.setUseCaches(false); // 不使用本地缓存
+            // U12 修复：设置 User-Agent，避免部分 CDN/防火墙拦截默认 Java UA
+            conn.setRequestProperty("User-Agent", "XiaQiaoQiaoToolbox/UpdateChecker (Android)");
 
             int code = conn.getResponseCode();
             if (code != HttpURLConnection.HTTP_OK) {

@@ -68,13 +68,22 @@ public class WatermarkExporter {
                          float textSizeFactor) {
         if (bitmap == null) return null;
 
-        Bitmap result = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),
-                Bitmap.Config.ARGB_8888);
+        Bitmap result;
+        try {
+            // M12 修复：大图创建等大 Bitmap 可能 OOM，捕获后返回 null 由调用方处理
+            result = Bitmap.createBitmap(bitmap.getWidth(), bitmap.getHeight(),
+                    Bitmap.Config.ARGB_8888);
+        } catch (OutOfMemoryError e) {
+            e.printStackTrace();
+            return null;
+        }
         Canvas canvas = new Canvas(result);
         canvas.drawBitmap(bitmap, 0, 0, null);
 
         if (text == null || text.isEmpty()) return result;
 
+        // M15 修复：先去掉尾部换行，避免序号追加到空行
+        text = text.replaceAll("\n+$", "");
         // 按换行符拆分为多行，序号追加到最后一行
         String[] srcLines = text.split("\n");
         if (numbering && srcLines.length > 0) {

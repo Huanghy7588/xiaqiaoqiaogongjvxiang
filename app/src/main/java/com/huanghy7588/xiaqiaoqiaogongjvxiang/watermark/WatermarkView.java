@@ -260,7 +260,7 @@ public class WatermarkView extends View {
 
         // 1. 先铺棋盘格底，透明底图片不会被误认为黑底
         if (checkerPaint == null) initCheckerPaint();
-        computeImageRect();
+        // M14 修复：onSizeChanged 已计算过 imageRect，onDraw 不再重复计算
         canvas.drawRect(imageRect, checkerPaint);
 
         // 2. 绘制原图
@@ -318,8 +318,9 @@ public class WatermarkView extends View {
     private void drawWatermark(Canvas canvas) {
         if (watermarkText.isEmpty()) return;
 
-        // 按换行符拆分为多行，序号追加到最后一行
-        String[] srcLines = watermarkText.split("\n");
+        // 按换行符拆分为多行，序号追加到最后一行（M15：先去尾部换行防序号追加到空行）
+        String trimmed = watermarkText.replaceAll("\n+$", "");
+        String[] srcLines = trimmed.split("\n");
         if (numberingEnabled && srcLines.length > 0) {
             srcLines[srcLines.length - 1] = srcLines[srcLines.length - 1] + currentNumber;
         }
@@ -415,9 +416,10 @@ public class WatermarkView extends View {
                 downX = x;
                 downY = y;
                 downTime = System.currentTimeMillis();
-                // 判断是否按在水印区域（稍微放大命中范围）；拖拽被禁用时永不进入拖拽
+                // M13 修复：40px 扩大范围转 dp，不同屏幕密度下物理尺寸一致
+                int hitPadding = (int) (40 * getResources().getDisplayMetrics().density);
                 RectF hitRect = new RectF(watermarkRect);
-                hitRect.inset(-40, -40);
+                hitRect.inset(-hitPadding, -hitPadding);
                 isDragging = dragEnabled && hitRect.contains(x, y);
                 lastTouchX = x;
                 lastTouchY = y;

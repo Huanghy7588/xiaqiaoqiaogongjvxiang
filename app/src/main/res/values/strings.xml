@@ -35,6 +35,11 @@
     <string name="wm_exporting">正在导出 %1$d/%2$d…</string>
     <string name="wm_export_done">已导出 %1$d 张图片到相册</string>
     <string name="wm_export_fail">导出失败</string>
+    <string name="wm_imported">已导入 %1$d 张图片</string>
+    <string name="wm_load_fail">图片加载失败</string>
+    <string name="wm_applied_all">已将当前位置应用到所有图片</string>
+    <string name="wm_no_images_toast">请先导入图片</string>
+    <string name="wm_no_text_toast">请输入水印文字</string>
 
     <!-- 更新与公告 -->
     <string name="announcement_title">公告</string>

@@ -43,11 +43,18 @@ public class ApkDownloadHelper {
     public static final String APK_FILE_NAME = "app-release.apk";
     /** 进度轮询间隔（毫秒） */
     private static final long POLL_INTERVAL_MS = 300;
+    /** U14 修复：防止重复下载标志 */
+    private static volatile boolean isDownloading = false;
 
     /**
      * 启动 APK 下载。
      */
     public static void downloadApk(Context context, String url) {
+        // U14 修复：防止重复下载
+        if (isDownloading) {
+            Toast.makeText(context, "正在下载中，请稍候…", Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
             DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
             request.setTitle(context.getString(R.string.app_name));
@@ -73,6 +80,7 @@ public class ApkDownloadHelper {
             }
 
             long downloadId = dm.enqueue(request);
+            isDownloading = true; // U14：标记下载中
 
             // 保存下载 ID
             context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -176,10 +184,12 @@ public class ApkDownloadHelper {
 
             // Activity 已销毁/弹窗已回收则停止轮询（下载仍在系统后台继续）（U5）
             if (dialog == null || progressBar == null || tvProgress == null) {
+                isDownloading = false; // U14：重置下载标志
                 return;
             }
             if (ctx instanceof Activity
                     && (((Activity) ctx).isFinishing() || ((Activity) ctx).isDestroyed())) {
+                isDownloading = false; // U14：重置下载标志
                 dismissSafely(dialog);
                 return;
             }
@@ -200,10 +210,12 @@ public class ApkDownloadHelper {
                     if (status == DownloadManager.STATUS_SUCCESSFUL) {
                         progressBar.setProgress(100);
                         tvProgress.setText("下载完成");
+                        isDownloading = false; // U14：重置下载标志
                         dismissSafely(dialog);
                         return; // 安装界面由 ApkInstallReceiver 拉起
                     }
                     if (status == DownloadManager.STATUS_FAILED) {
+                        isDownloading = false; // U14：重置下载标志
                         // 不直接关弹窗：提示改用浏览器下载，弹窗允许关闭返回
                         tvProgress.setText(R.string.update_fail_browser);
                         try {

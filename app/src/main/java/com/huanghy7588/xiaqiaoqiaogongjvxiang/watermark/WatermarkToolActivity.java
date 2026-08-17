@@ -30,6 +30,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 素材水印工具 Activity。
@@ -56,6 +58,11 @@ public class WatermarkToolActivity extends AppCompatActivity {
     /** 当前预览用 Bitmap */
     private Bitmap currentBitmap;
 
+    /** M2 修复：后台图片解码线程池，避免大图解码阻塞主线程 */
+    private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
+    /** 当前正在加载的图片索引，用于判断后台加载完成后是否仍需要显示 */
+    private volatile int loadingIndex = -1;
+
     /** 图片选择器（GetMultipleContents：走系统相册/文件选择器，兼容多数机型多选） */
     private final ActivityResultLauncher<String> imagePicker = registerForActivityResult(
             new ActivityResultContracts.GetMultipleContents(),
@@ -70,7 +77,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
                     }
                     currentIndex = imageList.size() - uris.size();
                     showCurrentImage();
-                    Toast.makeText(this, "已导入 " + uris.size() + " 张图片",
+                    Toast.makeText(this, getString(R.string.wm_imported, uris.size()),
                             Toast.LENGTH_SHORT).show();
                 }
             });
@@ -169,43 +176,50 @@ public class WatermarkToolActivity extends AppCompatActivity {
 
     // ==================== 图片显示与导航 ====================
 
-    /** 显示当前索引的图片 */
+    /** 显示当前索引的图片（M2 修复：后台解码，避免大图卡主线程） */
     private void showCurrentImage() {
         if (imageList.isEmpty()) {
             tvNoImage.setVisibility(android.view.View.VISIBLE);
             watermarkView.setImageBitmap(null);
-            currentBitmap = null;
+            if (currentBitmap != null) { currentBitmap.recycle(); currentBitmap = null; }
             updateIndexText();
             return;
         }
 
         tvNoImage.setVisibility(android.view.View.GONE);
-        ImageData data = imageList.get(currentIndex);
+        final ImageData data = imageList.get(currentIndex);
+        final int indexForLoad = currentIndex;
+        loadingIndex = indexForLoad;
 
-        // 回收旧 Bitmap
-        if (currentBitmap != null) {
-            currentBitmap.recycle();
-            currentBitmap = null;
-        }
-
-        // 加载图片（采样降分辨率用于预览）
-        currentBitmap = loadSampledBitmap(data.uri, 1080);
-        if (currentBitmap != null) {
-            watermarkView.setImageBitmap(currentBitmap);
-            // 应用该图保存的位置模式和位置
-            watermarkView.setPositionMode(data.positionMode);
-            watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
-            watermarkView.setTextSizeFactor(data.textSizeFactor);
-            watermarkView.setCurrentNumber(currentIndex + 1);
-            watermarkView.setWatermarkText(etText.getText().toString());
-            watermarkView.setStrokeEnabled(swStroke.isChecked());
-            watermarkView.setNumberingEnabled(swNumbering.isChecked());
-        } else {
-            // 图片加载失败，清空预览
-            watermarkView.setImageBitmap(null);
-            Toast.makeText(this, "图片加载失败", Toast.LENGTH_SHORT).show();
-        }
+        // 先清空旧 Bitmap，显示空白占位
+        if (currentBitmap != null) { currentBitmap.recycle(); currentBitmap = null; }
+        watermarkView.setImageBitmap(null);
         updateIndexText();
+
+        // M2 修复：后台线程解码，完成后回到主线程设置
+        imageExecutor.execute(() -> {
+            final Bitmap bmp = loadSampledBitmap(data.uri, 1080);
+            runOnUiThread(() -> {
+                // 后台加载期间用户可能已切到其他图片，只有索引一致才设置
+                if (loadingIndex != indexForLoad) {
+                    if (bmp != null) bmp.recycle();
+                    return;
+                }
+                if (bmp == null) {
+                    Toast.makeText(this, R.string.wm_load_fail, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                currentBitmap = bmp;
+                watermarkView.setImageBitmap(bmp);
+                watermarkView.setPositionMode(data.positionMode);
+                watermarkView.setPositionFraction(data.centerXFrac, data.centerYFrac);
+                watermarkView.setTextSizeFactor(data.textSizeFactor);
+                watermarkView.setCurrentNumber(currentIndex + 1);
+                watermarkView.setWatermarkText(etText.getText().toString());
+                watermarkView.setStrokeEnabled(swStroke.isChecked());
+                watermarkView.setNumberingEnabled(swNumbering.isChecked());
+            });
+        });
     }
 
     /** 更新索引显示 */
@@ -281,7 +295,7 @@ public class WatermarkToolActivity extends AppCompatActivity {
             data.centerYFrac = y;
             data.textSizeFactor = size;
         }
-        Toast.makeText(this, "已将当前位置应用到所有图片", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.wm_applied_all, Toast.LENGTH_SHORT).show();
     }
 
     /** 获取当前选中的水印位置模式（居中 / 左下角 / 右下角） */
@@ -333,11 +347,11 @@ public class WatermarkToolActivity extends AppCompatActivity {
     /** 导出所有图片到相册（入口：先做权限检查，再执行实际导出） */
     private void exportImages() {
         if (imageList.isEmpty()) {
-            Toast.makeText(this, "请先导入图片", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.wm_no_images_toast, Toast.LENGTH_SHORT).show();
             return;
         }
         if (etText.getText().toString().trim().isEmpty()) {
-            Toast.makeText(this, "请输入水印文字", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.wm_no_text_toast, Toast.LENGTH_SHORT).show();
             return;
         }
         // M1 修复：Android 9 及以下通过 MediaStore 写入需要 WRITE_EXTERNAL_STORAGE
@@ -486,22 +500,12 @@ public class WatermarkToolActivity extends AppCompatActivity {
     // ==================== 图片加载 ====================
 
     /**
-     * 加载图片 Bitmap，可选择降采样。
-     * @param reqWidth 目标宽度，0 表示加载原图
+     * 加载图片 Bitmap，降采样到指定宽度以内（M4：同时限制总像素防长图 OOM）。
+     * @param reqWidth 目标宽度
      */
     private Bitmap loadSampledBitmap(Uri uri, int reqWidth) {
         InputStream is = null;
         try {
-            if (reqWidth == 0) {
-                // 加载原图
-                is = getContentResolver().openInputStream(uri);
-                if (is == null) return null;
-                Bitmap bmp = BitmapFactory.decodeStream(is);
-                is.close();
-                is = null;
-                return bmp;
-            }
-
             // 先只读尺寸
             is = getContentResolver().openInputStream(uri);
             if (is == null) return null;
@@ -511,9 +515,11 @@ public class WatermarkToolActivity extends AppCompatActivity {
             is.close();
             is = null;
 
-            // 计算采样率
+            // M4 修复：同时限制宽度和总像素数，防止长图（如 4096×8000）OOM
             int sampleSize = 1;
-            while (opts.outWidth / sampleSize > reqWidth) {
+            long totalPixels = (long) opts.outWidth * opts.outHeight;
+            while (opts.outWidth / sampleSize > reqWidth
+                    || totalPixels / (sampleSize * sampleSize) > 24_000_000) {
                 sampleSize *= 2;
             }
             opts.inJustDecodeBounds = false;
@@ -540,6 +546,8 @@ public class WatermarkToolActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        imageExecutor.shutdownNow();
+        loadingIndex = -1;
         if (currentBitmap != null && !currentBitmap.isRecycled()) {
             currentBitmap.recycle();
             currentBitmap = null;

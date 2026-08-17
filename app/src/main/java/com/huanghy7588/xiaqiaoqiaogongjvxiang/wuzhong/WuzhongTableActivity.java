@@ -31,6 +31,8 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.annotation.NonNull;
 
+import android.util.LruCache;
+
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 
 import java.io.File;
@@ -47,7 +49,7 @@ import java.util.concurrent.Executors;
 /**
  * 无中生有表格：首页入口。
  * 模式（排位/娱乐）→ 每个人物（左一/左二…）填写必填项 → 添加人物 → 选填项（每人一份）→ 导出到相册。
- * 图片选项直接以图片网格贴在表单上，点图即选；序号按模式内连续编号。
+ * 图片选项直接以图片网格贴在表单上，点图即选；序号按人物内连续编号（每个人物从①开始）。
  */
 public class WuzhongTableActivity extends Activity {
 
@@ -65,8 +67,16 @@ public class WuzhongTableActivity extends Activity {
     /** 权限授予后要执行的保存动作（S4 修复：pre-Q 需要运行时请求存储权限） */
     private Runnable pendingStorageAction;
 
-    /** 带圈序号，按模式内顺序动态编号（1 开始连续） */
+    /** 带圈序号，按人物内顺序动态编号（1 开始连续） */
     private static final String[] CIRCLED = {"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"};
+
+    /** W6 修复：asset 缩略图缓存，避免 renderPersons 每次全量重载图片 */
+    private final LruCache<String, Bitmap> assetCache = new LruCache<String, Bitmap>(64) {
+        @Override
+        protected int sizeOf(String key, Bitmap value) {
+            return 1; // 按张数计，最多缓存 64 张缩略图
+        }
+    };
 
     private interface OnPick { void pick(int i); }
     private interface OnText { void on(String s); }
@@ -76,6 +86,17 @@ public class WuzhongTableActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_wuzhong_table);
+
+        // W5 修复：从 savedInstanceState 恢复数据，防止进程回收后丢失
+        if (savedInstanceState != null) {
+            mode = savedInstanceState.getInt("mode", PersonData.MODE_RANK);
+            @SuppressWarnings("unchecked")
+            List<PersonData> saved = (List<PersonData>) savedInstanceState.getSerializable("persons");
+            if (saved != null && !saved.isEmpty()) {
+                persons.clear();
+                persons.addAll(saved);
+            }
+        }
 
         personContainer = findViewById(R.id.person_container);
         btnModeRank = findViewById(R.id.btn_mode_rank);
@@ -95,9 +116,19 @@ public class WuzhongTableActivity extends Activity {
         findViewById(R.id.preview_thumb).setOnClickListener(v -> openPreview());
 
         // 默认一个人物（左一）
-        persons.add(new PersonData());
+        if (persons.isEmpty()) {
+            persons.add(new PersonData());
+        }
         updateModeButtons();
         renderPersons();
+    }
+
+    // W5 修复：进程被回收后恢复用户填写的全部数据
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("mode", mode);
+        outState.putSerializable("persons", (java.io.Serializable) persons);
     }
 
     private void updateModeButtons() {
@@ -475,8 +506,12 @@ public class WuzhongTableActivity extends Activity {
         return false;
     }
 
-    /** 从 assets 解码图片并缩放到目标尺寸（保持比例、开启抗锯齿） */
+    /** 从 assets 解码图片并缩放到目标尺寸（保持比例、开启抗锯齿），结果缓存到 LruCache（W6） */
     private Bitmap loadAssetBitmap(String path, int maxW, int maxH) {
+        // W6 修复：先查缓存，命中则直接返回，避免每次 renderPersons 都重新解码
+        String cacheKey = path + "_" + maxW + "x" + maxH;
+        Bitmap cached = assetCache.get(cacheKey);
+        if (cached != null) return cached;
         // W3 修复：用 try-with-resources，异常时流也关闭
         try (InputStream is = getAssets().open(path)) {
             Bitmap b = BitmapFactory.decodeStream(is);
@@ -486,6 +521,7 @@ public class WuzhongTableActivity extends Activity {
             int th = Math.max(1, Math.round(b.getHeight() * scale));
             Bitmap scaled = Bitmap.createScaledBitmap(b, tw, th, true);
             if (scaled != b) b.recycle();
+            assetCache.put(cacheKey, scaled);
             return scaled;
         } catch (IOException e) {
             e.printStackTrace();

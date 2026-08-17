@@ -14,6 +14,8 @@ import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 大图预览 Activity。
@@ -47,6 +49,11 @@ public class PreviewActivity extends AppCompatActivity {
     /** 当前预览用 Bitmap */
     private Bitmap currentBitmap;
 
+    /** M2 修复：后台图片解码线程池 */
+    private final ExecutorService imageExecutor = Executors.newSingleThreadExecutor();
+    /** 当前正在加载的索引，用于后台加载完成后校验 */
+    private volatile int loadingIndex = -1;
+
     private int currentIndex = 0;
 
     @Override
@@ -79,44 +86,58 @@ public class PreviewActivity extends AppCompatActivity {
         showImage();
     }
 
-    /** 显示当前索引的图片 */
+    /** 显示当前索引的图片（M2 修复：后台解码避免卡主线程） */
     private void showImage() {
-        ImageData data = sharedImages.get(currentIndex);
+        final ImageData data = sharedImages.get(currentIndex);
+        final int indexForLoad = currentIndex;
+        loadingIndex = indexForLoad;
 
-        // 回收旧 Bitmap
+        // 回收旧 Bitmap，显示空白占位
         if (currentBitmap != null) {
             currentBitmap.recycle();
             currentBitmap = null;
         }
-
-        // 大图预览用更高分辨率加载
-        currentBitmap = loadSampledBitmap(data.uri, 2048);
-        if (currentBitmap != null) {
-            previewView.setImageBitmap(currentBitmap);
-            previewView.setWatermarkText(sharedText);
-            previewView.setStrokeEnabled(sharedStroke);
-            previewView.setNumberingEnabled(sharedNumbering);
-            previewView.setCurrentNumber(currentIndex + 1);
-            previewView.setPositionMode(data.positionMode);
-            previewView.setPositionFraction(data.centerXFrac, data.centerYFrac);
-            previewView.setTextSizeFactor(data.textSizeFactor);
-        } else {
-            Toast.makeText(this, "图片加载失败", Toast.LENGTH_SHORT).show();
-        }
-
+        previewView.setImageBitmap(null);
         tvIndex.setText(String.format("%d / %d", currentIndex + 1, sharedImages.size()));
+
+        imageExecutor.execute(() -> {
+            final Bitmap bmp = loadSampledBitmap(data.uri, 2048);
+            runOnUiThread(() -> {
+                if (loadingIndex != indexForLoad) {
+                    if (bmp != null) bmp.recycle();
+                    return;
+                }
+                if (bmp == null) {
+                    Toast.makeText(this, "图片加载失败", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                currentBitmap = bmp;
+                previewView.setImageBitmap(currentBitmap);
+                previewView.setWatermarkText(sharedText);
+                previewView.setStrokeEnabled(sharedStroke);
+                previewView.setNumberingEnabled(sharedNumbering);
+                previewView.setCurrentNumber(currentIndex + 1);
+                previewView.setPositionMode(data.positionMode);
+                previewView.setPositionFraction(data.centerXFrac, data.centerYFrac);
+                previewView.setTextSizeFactor(data.textSizeFactor);
+            });
+        });
     }
 
-    /** 切换图片 */
+    /** 切换图片（M16 修复：到达首/末张时给出 Toast 提示） */
     private void navigate(int delta) {
         saveCurrent();
         int newIndex = currentIndex + delta;
-        if (newIndex < 0) newIndex = 0;
-        if (newIndex >= sharedImages.size()) newIndex = sharedImages.size() - 1;
-        if (newIndex != currentIndex) {
-            currentIndex = newIndex;
-            showImage();
+        if (newIndex < 0) {
+            Toast.makeText(this, "已经是第一张了", Toast.LENGTH_SHORT).show();
+            return;
         }
+        if (newIndex >= sharedImages.size()) {
+            Toast.makeText(this, "已经是最后一张了", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        currentIndex = newIndex;
+        showImage();
     }
 
     /** 保存当前预览里的水印状态到 ImageData（与主界面共享，直接生效） */
@@ -143,6 +164,8 @@ public class PreviewActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        imageExecutor.shutdownNow();
+        loadingIndex = -1;
         // 清空静态引用，避免泄漏（主界面 onResume 在此之前已执行完同步）
         sharedImages = null;
         sharedText = null;
@@ -168,9 +191,11 @@ public class PreviewActivity extends AppCompatActivity {
             is.close();
             is = null;
 
-            // 计算采样率
+            // 计算采样率（M4 修复：同时限制宽度和总像素数，防长图 OOM）
             int sampleSize = 1;
-            while (opts.outWidth / sampleSize > reqWidth) {
+            long totalPixels = (long) opts.outWidth * opts.outHeight;
+            while (opts.outWidth / sampleSize > reqWidth
+                    || totalPixels / (sampleSize * sampleSize) > 24_000_000) {
                 sampleSize *= 2;
             }
             opts.inJustDecodeBounds = false;

@@ -1,13 +1,15 @@
 package com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 无中生有表格：单个人物（一列）的数据模型。
  * 同时负责把选择结果计算成表格行（label + 单元格内容），供 TableRenderer 绘制。
+ * 实现 Serializable 以支持 onSaveInstanceState 恢复（W5）。
  */
-public class PersonData {
+public class PersonData implements Serializable {
 
     /** assets 图片文件夹 */
     public static final String F_PROFICIENCY = "photo/proficiency";
@@ -83,7 +85,7 @@ public class PersonData {
     /** 选填项（每个人物独立一份） */
     public final OptionalState opt = new OptionalState();
 
-    public static class OptionalState {
+    public static class OptionalState implements Serializable {
         public boolean memoryStone; // 需要铭记之石
         public boolean heroSign;    // 需要英雄签名
         public boolean profBadge;   // 需要职业标

@@ -13,6 +13,8 @@ import androidx.core.content.FileProvider;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 
 /**
  * APK 下载完成广播接收器。
@@ -59,6 +61,13 @@ public class ApkInstallReceiver extends BroadcastReceiver {
             return;
         }
 
+        // U16 修复：校验文件是否为有效 APK（PK 魔数），防止 CDN 返回 HTML 被当 APK 安装
+        if (!isValidApk(file)) {
+            Toast.makeText(context, "下载文件无效，请用浏览器下载", Toast.LENGTH_LONG).show();
+            file.delete();
+            return;
+        }
+
         Intent intent = new Intent(Intent.ACTION_VIEW);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         intent.setDataAndType(getApkUri(context, file), "application/vnd.android.package-archive");
@@ -73,6 +82,21 @@ public class ApkInstallReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             e.printStackTrace();
             Toast.makeText(context, R.string.update_download_fail, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
+     * U16 修复：检查文件是否以 PK 魔数开头（APK 本质是 ZIP，PK\x03\x04）。
+     */
+    private boolean isValidApk(File file) {
+        if (file.length() < 1024) return false; // 太小肯定不是 APK
+        try (FileInputStream fis = new FileInputStream(file)) {
+            byte[] magic = new byte[4];
+            int read = fis.read(magic);
+            return read == 4 && magic[0] == 'P' && magic[1] == 'K'
+                    && magic[2] == 3 && magic[3] == 4;
+        } catch (IOException e) {
+            return false;
         }
     }
 

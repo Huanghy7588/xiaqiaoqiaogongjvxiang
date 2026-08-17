@@ -49,12 +49,6 @@ public class MoreFragment extends Fragment {
     private static final String SAVE_FILE_NAME = "xiaqiaoqiao_donate_qr.png";
 
     private Button btnCheckUpdate;
-    private final Runnable restoreBtn = () -> {
-        if (btnCheckUpdate != null) {
-            btnCheckUpdate.setText(R.string.more_check_update);
-            btnCheckUpdate.setEnabled(true);
-        }
-    };
 
     // pre-Q 存储权限请求（M8 修复：此前只检查不请求）
     private WeakReference<ImageView> ivQrPending;
@@ -81,17 +75,19 @@ public class MoreFragment extends Fragment {
         int versionCode = UpdateChecker.getLocalVersionCode(requireContext());
         tvVersion.setText(versionName + " (" + versionCode + ")");
 
-        // 手动检查更新
+        // 手动检查更新（U4 修复：用回调替代固定 3s 超时，检测完成即恢复按钮）
         btnCheckUpdate = root.findViewById(R.id.btn_check_update);
         btnCheckUpdate.setOnClickListener(v -> {
             if (getActivity() == null) return;
             btnCheckUpdate.setText(R.string.more_checking);
             btnCheckUpdate.setEnabled(false);
+            UpdateChecker.setOnCheckCompleteListener(() -> {
+                if (btnCheckUpdate != null) {
+                    btnCheckUpdate.setText(R.string.more_check_update);
+                    btnCheckUpdate.setEnabled(true);
+                }
+            });
             UpdateChecker.checkManual(getActivity());
-
-            // 3 秒后兜底恢复按钮（检测结束会在主线程回调弹窗/Toast）
-            // 切走页面时由 onDestroyView 移除回调，避免持有视图树泄漏（M7）
-            v.postDelayed(restoreBtn, 3000);
         });
 
         // QQ 号长按复制
@@ -112,10 +108,8 @@ public class MoreFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        // M7 修复：移除挂起的按钮恢复回调，避免泄漏整个视图树
-        if (btnCheckUpdate != null) {
-            btnCheckUpdate.removeCallbacks(restoreBtn);
-        }
+        // M7 修复：清除回调引用，避免泄漏视图树
+        UpdateChecker.setOnCheckCompleteListener(null);
         btnCheckUpdate = null;
     }
 
