@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 16,
-    "versionName": "1.1.4",
-    "updateLog": "v1.1.4 无中生有表格优化：\n1. 英雄和皮肤分开输入，各自独立选择颜色（红方选红色/金色，蓝方选蓝色/金色）\n2. 表格宽度大幅缩窄，查看更方便\n3. 图片缩小、字体放大，整体更协调\n4. 包含 v1.1.3 全部稳定性修复（崩溃/ANR/OOM/权限/内存泄漏）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.4/app-release.apk",
+    "versionCode": 17,
+    "versionName": "1.1.5",
+    "updateLog": "v1.1.5 无中生有表格优化：\n1. 色卡改为「英雄色卡」「皮肤色卡」，各自独立选颜色\n2. 表格宽度大幅缩窄（约缩小一半），自适应更紧凑\n3. 字体放大、图片缩小，整体更协调\n4. 召唤师技能「其他」按钮改为与图片选项同等大小\n5. 「区或县标」改为「区标」，「发光/不发光」改为「带光效/不带光效」",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.5/app-release.apk",
     "forceUpdate": false
   }
 }

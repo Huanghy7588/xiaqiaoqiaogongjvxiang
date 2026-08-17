@@ -22,12 +22,12 @@ import java.util.Map;
  */
 public class TableRenderer {
 
-    private static final float BASE_W = 1800f;      // 基准宽（缩窄，避免表格过宽）
-    private static final float BASE_LABEL_W = 380f; // 标签列缩窄
-    private static final float BASE_HEADER_H = 130f;
-    private static final float BASE_TEXT_ROW_H = 150f; // 行高略增，配合更大字体
-    private static final float BASE_MAX_IMG_H = 300f;  // 图片最大高度缩小
-    private static final float BASE_PAD = 14f;
+    private static final float BASE_W = 1000f;      // 基准宽（大幅缩窄，约为原来一半）
+    private static final float BASE_LABEL_W = 220f; // 标签列缩窄
+    private static final float BASE_HEADER_H = 100f;
+    private static final float BASE_TEXT_ROW_H = 120f;
+    private static final float BASE_MAX_IMG_H = 160f;  // 图片最大高度缩小
+    private static final float BASE_PAD = 10f;
 
     /** 渲染宽度由调用方指定：导出 2500，页面内嵌预览用小图省内存 */
     public Bitmap render(List<PersonData> persons, int mode, int imgW) {
@@ -112,9 +112,9 @@ public class TableRenderer {
 
         // 表头
         cv.drawRect(0, 0, imgW, headerH, pHeaderBg);
-        drawCellText(cv, "项目", 0, 0, labelW, headerH, 48 * s, true, pad, null);
+        drawCellText(cv, "项目", 0, 0, labelW, headerH, 32 * s, true, pad, null);
         for (int i = 0; i < n; i++) {
-            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 48 * s, true, pad, null);
+            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 32 * s, true, pad, null);
         }
         cv.drawLine(0, headerH, imgW, headerH, pLine);
 
@@ -128,7 +128,7 @@ public class TableRenderer {
             String label = labels.get(r);
             // 标签列
             cv.drawRect(0, y, labelW, y + h, pLabelBg);
-            drawCellText(cv, label, 0, y, labelW, h, 42 * s, false, pad, null);
+            drawCellText(cv, label, 0, y, labelW, h, 28 * s, false, pad, null);
             // 竖向分隔线
             cv.drawLine(labelW, y, labelW, y + h, pLine);
             // 人物列
@@ -183,15 +183,15 @@ public class TableRenderer {
         if (c == null) return;
         boolean hasImg = c.imageAsset != null;
         boolean hasText = c.text != null && !c.text.isEmpty();
-        int textZone = Math.min(Math.round(65 * s), h / 3);
+        int textZone = Math.min(Math.round(50 * s), h / 3);
         if (hasImg && hasText) {
             // 文字在上，图片在下
-            drawCellText(cv, c.text, x, y, w, textZone, 38 * s, false, pad, c.textColor);
+            drawCellText(cv, c.text, x, y, w, textZone, 26 * s, false, pad, c.textColor);
             drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH, assetCache);
         } else if (hasImg) {
             drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH, assetCache);
         } else if (hasText) {
-            drawCellText(cv, c.text, x, y, w, h, 42 * s, false, pad, c.textColor);
+            drawCellText(cv, c.text, x, y, w, h, 30 * s, false, pad, c.textColor);
         }
     }
 
@@ -226,7 +226,7 @@ public class TableRenderer {
         paint.setTextSize(size);
         // 自适应缩放，防止文字超出列宽
         float maxW = w - pad * 2;
-        while (paint.measureText(text) > maxW && paint.getTextSize() > 14 * Math.max(0.4f, size / 42f)) {
+        while (paint.measureText(text) > maxW && paint.getTextSize() > 12 * Math.max(0.4f, size / 30f)) {
             paint.setTextSize(paint.getTextSize() - 1);
         }
         Paint.FontMetrics fm = paint.getFontMetrics();

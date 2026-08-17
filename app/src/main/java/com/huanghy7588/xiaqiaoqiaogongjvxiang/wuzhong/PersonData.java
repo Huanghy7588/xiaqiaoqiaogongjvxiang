@@ -29,28 +29,27 @@ public class PersonData implements Serializable {
     /** ① 蓝方/红方 */
     public int side = -1; // 0 蓝方, 1 红方
 
-    /** 色卡（蓝红方与英雄皮肤之间） */
-    public int colorCard = -1; // 0 高饱和, 1 低饱和
-
-    /** ② 英雄、皮肤（各自独立输入 + 各自独立选颜色） */
-    public String hero = "";
-    public String skin = "";
+    /** ② 英雄色卡、皮肤色卡（各自独立选颜色） */
     public int heroColor = -1; // 0 队伍色(红方=红/蓝方=蓝), 1 金色
     public int skinColor = -1; // 0 队伍色(红方=红/蓝方=蓝), 1 金色
+
+    /** ③ 英雄、皮肤输入 */
+    public String hero = "";
+    public String skin = "";
     public String idName = "";
     public int idBar = -1; // -1 未选, 0 无, 1 有（仅第一个选"有"后其他人不可选）
 
     /** ③ 熟练度/标 */
     public int profMode = -1; // 0 熟练度, 1 标
     public String profImage = null; // assets 路径（熟练度图片）
-    public int badgeGlow = -1; // 0 发光, 1 不发光
-    public int badgeLevel = -1; // 0 区县,1 市,2 省,3 小国标,4 国标
+    public int badgeGlow = -1; // 0 带光效, 1 不带光效
+    public int badgeLevel = -1; // 0 区标,1 市,2 省,3 小国标,4 国标
     public String badgeNum = ""; // 50强/100强/数字
 
     /** ④ 框 */
     public int frameType = -1; // 0 段位框, 1 巅峰框
     public int rankFrame = -1; // 0 青铜(无框)..9 百星
-    public int rankFrameGlow = -1; // 百星专属：0 发光,1 不发光
+    public int rankFrameGlow = -1; // 百星专属：0 带光效,1 不带光效
     public int frameBadge = -1; // -1 未选, 0 是(有角标), 1 否(无角标)
     public int frameBadgeType = -1; // 0 天梯排名, 1 巅峰角标（frameBadge==0 时）
     public String ladderRank = ""; // 天梯排名文本
@@ -62,7 +61,7 @@ public class PersonData implements Serializable {
 
     /** ⑤ 贵族标 */
     public int nobleLevel = -1; // 0..9 = V1..V10, 10 = 传承标
-    public int nobleGlow = -1; // 0 发光,1 不发光（V7-V10 / 传承标）
+    public int nobleGlow = -1; // 0 带光效,1 不带光效（V7-V10 / 传承标）
     public String noble10Image = null; // V10 图片
     public String passDownImage = null; // 传承标图片
 
@@ -112,7 +111,7 @@ public class PersonData implements Serializable {
     }
 
     /** 标签常量（与表单保持一致） */
-    public static final String[] BADGE_LEVEL = {"区或县标", "市标", "省标", "小国标", "国标"};
+    public static final String[] BADGE_LEVEL = {"区标", "市标", "省标", "小国标", "国标"};
     public static final String[] RANK_FRAME = {"青铜(无框)", "白银", "黄金", "铂金", "钻石",
             "星耀", "王者", "无双", "荣耀", "百星"};
     public static final String[] NOBLE = {"V1", "V2", "V3", "V4", "V5", "V6", "V7", "V8", "V9", "V10", "传承标"};
@@ -150,9 +149,13 @@ public class PersonData implements Serializable {
 
         // ①
         rows.add(new Row("蓝方/红方", new Cell(side == 0 ? "蓝方" : side == 1 ? "红方" : "", null)));
-        // 色卡
-        rows.add(new Row("色卡", new Cell(colorCard == 0 ? "高饱和" : colorCard == 1 ? "低饱和" : "", null)));
-        // ② 英雄、皮肤（各自带颜色）
+        // ② 英雄色卡、皮肤色卡
+        String teamColorName = side == 1 ? "红色" : side == 0 ? "蓝色" : "";
+        rows.add(new Row("英雄色卡", new Cell(
+                heroColor == 1 ? "金色" : heroColor == 0 ? teamColorName : "", null)));
+        rows.add(new Row("皮肤色卡", new Cell(
+                skinColor == 1 ? "金色" : skinColor == 0 ? teamColorName : "", null)));
+        // ③ 英雄、皮肤（文字按色卡颜色渲染）
         rows.add(new Row("英雄", colorize(hero, heroColor, side)));
         rows.add(new Row("皮肤", colorize(skin, skinColor, side)));
         rows.add(new Row("ID名", new Cell(idName == null ? "" : idName, null)));
@@ -163,8 +166,8 @@ public class PersonData implements Serializable {
             rows.add(new Row("熟练度/标", new Cell("", profImage)));
         } else if (profMode == 1) {
             StringBuilder sb = new StringBuilder();
-            if (badgeGlow == 0) sb.append("发光");
-            else if (badgeGlow == 1) sb.append("不发光");
+            if (badgeGlow == 0) sb.append("带光效");
+            else if (badgeGlow == 1) sb.append("不带光效");
             sb.append(s(badgeLevel, BADGE_LEVEL));
             if (badgeLevel != 4 && badgeNum != null && !badgeNum.isEmpty()) sb.append(badgeNum);
             rows.add(new Row("熟练度/标", new Cell(sb.toString(), null)));
@@ -176,8 +179,8 @@ public class PersonData implements Serializable {
         if (frameType == 0) { // 段位框
             StringBuilder sb = new StringBuilder(s(rankFrame, RANK_FRAME));
             if (rankFrame == 9) { // 百星
-                if (rankFrameGlow == 0) sb.append("·发光");
-                else if (rankFrameGlow == 1) sb.append("·不发光");
+                if (rankFrameGlow == 0) sb.append("·带光效");
+            else if (rankFrameGlow == 1) sb.append("·不带光效");
             }
             if (frameBadge == 0) { // 有角标
                 if (frameBadgeType == 0) sb.append("·天梯").append(ladderRank == null ? "" : ladderRank);
@@ -199,8 +202,8 @@ public class PersonData implements Serializable {
         if (nobleLevel >= 0 && nobleLevel <= 10) {
             StringBuilder sb = new StringBuilder(s(nobleLevel, NOBLE));
             if (nobleLevel >= 6) { // V7-V10 / 传承
-                if (nobleGlow == 0) sb.append("·发光");
-                else if (nobleGlow == 1) sb.append("·不发光");
+                if (nobleGlow == 0) sb.append("·带光效");
+            else if (nobleGlow == 1) sb.append("·不带光效");
             }
             String img = null;
             if (nobleLevel == 9) img = noble10Image;       // V10

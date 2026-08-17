@@ -151,7 +151,7 @@ public class WuzhongTableActivity extends Activity {
         ImageView thumb = findViewById(R.id.preview_thumb);
         if (thumb == null) return;
         try {
-            Bitmap b = new TableRenderer(this).render(persons, mode, 800);
+            Bitmap b = new TableRenderer(this).render(persons, mode, 500);
             if (b != null) {
                 // S6 修复：先回收旧缩略图，避免反复操作内存暴涨
                 Bitmap old = lastThumb;
@@ -204,28 +204,23 @@ public class WuzhongTableActivity extends Activity {
         card.addView(sectionTitle(sec, "蓝方/红方"));
         card.addView(choiceButtons(new String[]{"蓝方", "红方"}, p.side, i -> { p.side = i; renderPersons(); }));
 
-        // 色卡（高饱和/低饱和）
-        card.addView(sectionTitle(sec, "色卡"));
-        card.addView(choiceButtons(new String[]{"高饱和", "低饱和"}, p.colorCard, i -> { p.colorCard = i; renderPersons(); }));
-        TextView tip = subTitle("高饱和更加好看；低饱和还原局内");
-        tip.setTextColor(Color.parseColor("#F57F17"));
-        card.addView(tip);
-
-        // ② 英雄、皮肤（各自独立输入 + 各自独立选颜色）
-        card.addView(sectionTitle(sec, "英雄、皮肤"));
-        // 根据已选队伍决定颜色按钮标签
+        // ② 英雄色卡、皮肤色卡（根据队伍显示对应颜色按钮）
+        card.addView(sectionTitle(sec, "英雄色卡、皮肤色卡"));
         String teamColorLabel = p.side == 1 ? "红色" : "蓝色";
-        TextView heroTip = subTitle("蓝方：英雄/皮肤选 蓝色 或 金色\n红方：英雄/皮肤选 红色 或 金色\n（英雄与皮肤可分别选色）");
-        heroTip.setTextColor(Color.parseColor("#F57F17"));
-        card.addView(heroTip);
-        // 英雄
+        TextView colorTip = subTitle("红方：选 红色 或 金色\n蓝方：选 蓝色 或 金色\n（英雄与皮肤可分别选色）");
+        colorTip.setTextColor(Color.parseColor("#F57F17"));
+        card.addView(colorTip);
+        card.addView(subTitle("英雄色卡"));
+        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.heroColor, i -> { p.heroColor = i; renderPersons(); }));
+        card.addView(subTitle("皮肤色卡"));
+        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.skinColor, i -> { p.skinColor = i; renderPersons(); }));
+
+        // ③ 英雄、皮肤 + ID名 + ID条
+        card.addView(sectionTitle(sec, "英雄、皮肤"));
         card.addView(subTitle("英雄"));
         card.addView(makeEdit("请输入英雄名", p.hero, s -> p.hero = s));
-        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.heroColor, i -> { p.heroColor = i; renderPersons(); }));
-        // 皮肤
         card.addView(subTitle("皮肤"));
         card.addView(makeEdit("请输入皮肤名", p.skin, s -> p.skin = s));
-        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.skinColor, i -> { p.skinColor = i; renderPersons(); }));
         card.addView(sectionTitle("ID名"));
         card.addView(makeEdit("请输入ID名", p.idName, s -> p.idName = s));
 
@@ -257,8 +252,8 @@ public class WuzhongTableActivity extends Activity {
             card.addView(subTitle("熟练度图片（点图选择）"));
             card.addView(imageGrid(PersonData.F_PROFICIENCY, p.profImage, null, path -> p.profImage = path));
         } else if (p.profMode == 1) {
-            card.addView(subTitle("发光 / 不发光"));
-            card.addView(choiceButtons(new String[]{"发光", "不发光"}, p.badgeGlow, i -> { p.badgeGlow = i; renderPersons(); }));
+            card.addView(subTitle("带光效 / 不带光效"));
+            card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.badgeGlow, i -> { p.badgeGlow = i; renderPersons(); }));
             card.addView(subTitle("标等级"));
             card.addView(choiceButtons(PersonData.BADGE_LEVEL, p.badgeLevel, i -> {
                 p.badgeLevel = i;
@@ -279,8 +274,8 @@ public class WuzhongTableActivity extends Activity {
             card.addView(subTitle("段位"));
             card.addView(choiceButtons(PersonData.RANK_FRAME, p.rankFrame, i -> { p.rankFrame = i; renderPersons(); }));
             if (p.rankFrame == 9) { // 百星
-                card.addView(subTitle("百星发光 / 不发光"));
-                card.addView(choiceButtons(new String[]{"发光", "不发光"}, p.rankFrameGlow, i -> { p.rankFrameGlow = i; renderPersons(); }));
+                card.addView(subTitle("百星带光效 / 不带光效"));
+        card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.rankFrameGlow, i -> { p.rankFrameGlow = i; renderPersons(); }));
             }
             card.addView(subTitle("是否选择框的角标？"));
             card.addView(choiceButtons(new String[]{"是", "否"}, p.frameBadge, i -> { p.frameBadge = i; renderPersons(); }));
@@ -316,8 +311,8 @@ public class WuzhongTableActivity extends Activity {
         card.addView(sectionTitle(sec, "贵族标"));
         card.addView(choiceButtons(PersonData.NOBLE, p.nobleLevel, i -> { p.nobleLevel = i; renderPersons(); }));
         if (p.nobleLevel >= 6) { // V7-V10 / 传承
-            card.addView(subTitle("发光 / 不发光"));
-            card.addView(choiceButtons(new String[]{"发光", "不发光"}, p.nobleGlow, i -> { p.nobleGlow = i; renderPersons(); }));
+            card.addView(subTitle("带光效 / 不带光效"));
+        card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.nobleGlow, i -> { p.nobleGlow = i; renderPersons(); }));
         }
         if (p.nobleLevel == 9) {
             card.addView(subTitle("V10 样式（点图选择）"));
@@ -344,8 +339,47 @@ public class WuzhongTableActivity extends Activity {
             renderPersons();
         }));
         card.addView(subTitle("或选择其他技能"));
-        card.addView(choiceButtons(new String[]{"其他"}, p.summonerOtherMode ? 0 : -1,
-                i -> { p.summonerOtherMode = true; p.summonerImage = null; renderPersons(); }));
+        // 把"其他"做成跟图片选项一样大小的按钮（72dp），不再用 choiceButtons
+        GridLayout otherGrid = new GridLayout(this);
+        otherGrid.setColumnCount(4);
+        otherGrid.setUseDefaultMargins(true);
+        LinearLayout.LayoutParams glp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        otherGrid.setLayoutParams(glp);
+
+        LinearLayout otherCell = new LinearLayout(this);
+        otherCell.setOrientation(LinearLayout.VERTICAL);
+        otherCell.setGravity(Gravity.CENTER);
+        otherCell.setPadding(dp(4), dp(4), dp(4), dp(4));
+        GradientDrawable otherBg = new GradientDrawable();
+        otherBg.setCornerRadius(dp(8));
+        otherBg.setColor(p.summonerOtherMode ? Color.parseColor("#C8E6C9") : Color.parseColor("#F5F5F5"));
+        otherBg.setStroke(dp(2), p.summonerOtherMode ? Color.parseColor("#4CAF50") : Color.parseColor("#BDBDBD"));
+        otherCell.setBackground(otherBg);
+
+        TextView otherLabel = new TextView(this);
+        otherLabel.setText("其他");
+        otherLabel.setGravity(Gravity.CENTER);
+        otherLabel.setTextSize(14);
+        otherLabel.setTextColor(Color.parseColor("#424242"));
+        LinearLayout.LayoutParams labelLp = new LinearLayout.LayoutParams(dp(72), dp(72));
+        labelLp.gravity = Gravity.CENTER;
+        otherLabel.setLayoutParams(labelLp);
+        otherCell.addView(otherLabel);
+
+        GridLayout.LayoutParams oclp = new GridLayout.LayoutParams(
+                GridLayout.spec(GridLayout.UNDEFINED, 1f), GridLayout.spec(GridLayout.UNDEFINED, 1f));
+        oclp.width = 0;
+        oclp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+        oclp.setMargins(dp(4), dp(4), dp(4), dp(4));
+        otherCell.setLayoutParams(oclp);
+        otherCell.setOnClickListener(v -> {
+            p.summonerOtherMode = true;
+            p.summonerImage = null;
+            renderPersons();
+        });
+        otherGrid.addView(otherCell);
+        card.addView(otherGrid);
         if (p.summonerOtherMode) {
             card.addView(makeEdit("请输入其他技能", p.summonerOther, s -> p.summonerOther = s));
         }
@@ -668,9 +702,9 @@ public class WuzhongTableActivity extends Activity {
             return;
         }
         Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
-        // S5 修复：大图渲染移出主线程，避免 ANR（宽度 1800 匹配渲染器基准）
+        // S5 修复：大图渲染移出主线程，避免 ANR（宽度 1000 匹配渲染器基准）
         executor.execute(() -> {
-            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1800);
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1000);
             runOnUiThread(() -> showPreviewDialog(bmp));
         });
     }
@@ -727,9 +761,9 @@ public class WuzhongTableActivity extends Activity {
 
     private void doExport() {
         Toast.makeText(this, "生成中…", Toast.LENGTH_SHORT).show();
-        // S5 修复：大图渲染 + PNG 压缩移出主线程，避免 ANR（宽度 1800）
+        // S5 修复：大图渲染 + PNG 压缩移出主线程，避免 ANR（宽度 1000）
         executor.execute(() -> {
-            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1800);
+            Bitmap bmp = new TableRenderer(this).render(persons, mode, 1000);
             if (bmp == null) {
                 runOnUiThread(() -> Toast.makeText(this, "生成失败", Toast.LENGTH_SHORT).show());
                 return;
