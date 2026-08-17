@@ -41,11 +41,12 @@
             android:textSize="14sp" />
     </LinearLayout>
 
-    <!-- 图片预览区域 -->
-    <FrameLayout
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+    <!-- 图片预览区域（固定 1:1 正方形，图片按真实比例居中，超出部分留黑边不显示） -->
+    <com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.SquareLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
         android:background="@color/black">
 
         <com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkView
@@ -62,13 +63,190 @@
             android:textColor="@color/white"
             android:textSize="16sp"
             android:visibility="visible" />
-    </FrameLayout>
+    </com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.SquareLayout>
 
-    <!-- 控制区域（可滚动） -->
-    <ScrollView
+    <!-- 位置调整区（固定，置于预览正下方、文字输入框上方，方便调整水印位置） -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/bg_card">
+        android:background="@color/bg_card"
+        android:orientation="vertical"
+        android:padding="12dp">
+
+        <!-- 水印位置：居中 / 左下角 / 右下角 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/wm_default_pos"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <RadioGroup
+                android:id="@+id/rg_position"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/rb_pos_bottom_left"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/wm_pos_bottom_left" />
+
+                <RadioButton
+                    android:id="@+id/rb_pos_center"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:checked="true"
+                    android:text="@string/wm_pos_center" />
+
+                <RadioButton
+                    android:id="@+id/rb_pos_bottom_right"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/wm_pos_bottom_right" />
+            </RadioGroup>
+        </LinearLayout>
+
+        <!-- 位置调整：十字方向盘（上/左/右/下） -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="@string/wm_fine_tune_pos"
+            android:textColor="@color/text_primary"
+            android:textStyle="bold" />
+
+        <GridLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="6dp"
+            android:columnCount="3">
+
+            <!-- 第一行：上 -->
+            <Space
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+
+            <Button
+                android:id="@+id/btn_up"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="↑"
+                android:textSize="20sp" />
+
+            <Space
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+
+            <!-- 第二行：左 / 中空 / 右 -->
+            <Button
+                android:id="@+id/btn_left"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="←"
+                android:textSize="20sp" />
+
+            <Space
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+
+            <Button
+                android:id="@+id/btn_right"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="→"
+                android:textSize="20sp" />
+
+            <!-- 第三行：下 -->
+            <Space
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+
+            <Button
+                android:id="@+id/btn_down"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:padding="0dp"
+                android:text="↓"
+                android:textSize="20sp" />
+
+            <Space
+                android:layout_width="52dp"
+                android:layout_height="52dp" />
+        </GridLayout>
+
+        <!-- 字体大小 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/wm_font_size"
+                android:textColor="@color/text_primary"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/btn_bigger"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="A+" />
+
+            <Button
+                android:id="@+id/btn_smaller"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:minWidth="0dp"
+                android:text="A-" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 其余功能（可滚动） -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/bg_card"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -81,11 +259,11 @@
                 android:id="@+id/et_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="top|start"
                 android:hint="@string/wm_input_hint"
                 android:inputType="textMultiLine"
-                android:minLines="1"
                 android:maxLines="3"
-                android:gravity="top|start" />
+                android:minLines="1" />
 
             <!-- 字体提示 -->
             <TextView
@@ -118,182 +296,6 @@
                     android:text="@string/wm_numbering" />
             </LinearLayout>
 
-            <!-- 水印位置：居中 / 左下角 / 右下角 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/wm_default_pos"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold" />
-
-                <RadioGroup
-                    android:id="@+id/rg_position"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="12dp"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-
-                    <RadioButton
-                        android:id="@+id/rb_pos_center"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:checked="true"
-                        android:text="@string/wm_pos_center" />
-
-                    <RadioButton
-                        android:id="@+id/rb_pos_bottom_left"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/wm_pos_bottom_left" />
-
-                    <RadioButton
-                        android:id="@+id/rb_pos_bottom_right"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/wm_pos_bottom_right" />
-                </RadioGroup>
-            </LinearLayout>
-
-            <!-- 预览提示：点击上方预览图可进入大图预览 -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:text="@string/wm_preview_hint"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
-
-            <!-- 位置微调：十字方向盘布局（上/左/右/下 四方向，类似游戏方向盘） -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:text="@string/wm_fine_tune_pos"
-                android:textColor="@color/text_primary"
-                android:textStyle="bold" />
-
-            <GridLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="6dp"
-                android:columnCount="3">
-
-                <!-- 第一行：上 -->
-                <Space
-                    android:layout_width="52dp"
-                    android:layout_height="52dp" />
-
-                <Button
-                    android:id="@+id/btn_up"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="0dp"
-                    android:text="↑"
-                    android:textSize="20sp" />
-
-                <Space
-                    android:layout_width="52dp"
-                    android:layout_height="52dp" />
-
-                <!-- 第二行：左 / 中空 / 右 -->
-                <Button
-                    android:id="@+id/btn_left"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="0dp"
-                    android:text="←"
-                    android:textSize="20sp" />
-
-                <Space
-                    android:layout_width="52dp"
-                    android:layout_height="52dp" />
-
-                <Button
-                    android:id="@+id/btn_right"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="0dp"
-                    android:text="→"
-                    android:textSize="20sp" />
-
-                <!-- 第三行：下 -->
-                <Space
-                    android:layout_width="52dp"
-                    android:layout_height="52dp" />
-
-                <Button
-                    android:id="@+id/btn_down"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="52dp"
-                    android:layout_height="52dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="0dp"
-                    android:text="↓"
-                    android:textSize="20sp" />
-
-                <Space
-                    android:layout_width="52dp"
-                    android:layout_height="52dp" />
-            </GridLayout>
-
-            <!-- 字体大小：独立于方向键，放在方向盘下方 -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/wm_font_size"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/btn_bigger"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:minWidth="0dp"
-                    android:text="A+" />
-
-                <Button
-                    android:id="@+id/btn_smaller"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_weight="1"
-                    android:minWidth="0dp"
-                    android:text="A-" />
-            </LinearLayout>
-
             <!-- 应用位置到所有图 / 重置 -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -314,8 +316,8 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:text="@string/wm_reset_pos" />
             </LinearLayout>
 
@@ -339,10 +341,19 @@
                     style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:text="@string/wm_next" />
             </LinearLayout>
+
+            <!-- 预览提示：点击上方预览图可进入大图预览 -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/wm_preview_hint"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
 
             <!-- 导入 / 导出 -->
             <LinearLayout
@@ -364,8 +375,8 @@
                     style="@style/Widget.XiaQiaoQiao.Button.Primary"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
+                    android:layout_weight="1"
                     android:backgroundTint="@color/brand_accent"
                     android:text="@string/wm_export" />
             </LinearLayout>

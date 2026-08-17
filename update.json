@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 17,
-    "versionName": "1.1.5",
-    "updateLog": "v1.1.5 无中生有表格优化：\n1. 色卡改为「英雄色卡」「皮肤色卡」，各自独立选颜色\n2. 表格宽度大幅缩窄（约缩小一半），自适应更紧凑\n3. 字体放大、图片缩小，整体更协调\n4. 召唤师技能「其他」按钮改为与图片选项同等大小\n5. 「区或县标」改为「区标」，「发光/不发光」改为「带光效/不带光效」",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.5/app-release.apk",
+    "versionCode": 18,
+    "versionName": "1.1.6",
+    "updateLog": "v1.1.6 素材水印工具预览优化：\n1. 预览图改为固定 1:1 正方形，图片按真实比例居中显示（竖长图/横图长边顶满、其余留黑边，导出仍按原图比例）\n2. 水印位置调整（位置选项、方向盘、字体大小）移到预览正下方、文字框上方，其余功能可滚动\n3. 水印位置选项顺序调整为：左下角 → 居中 → 右下角",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.6/app-release.apk",
     "forceUpdate": false
   }
 }
