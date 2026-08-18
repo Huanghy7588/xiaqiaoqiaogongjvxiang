@@ -111,13 +111,102 @@
                 android:text="@string/more_qq_hint"
                 android:textColor="@color/text_secondary"
                 android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- 字帖小助手说明：拆成多张卡片，每张只讲一个点，避免信息糊成一坨 -->
+
+        <!-- 卡片1：软件性质 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="@string/more_purchase_title"
+                android:textColor="@color/brand_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:lineSpacingExtra="2dp"
-                android:text="@string/more_purchase_tip"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/more_purchase_publish"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 卡片2：购买联系方式 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="购买联系"
+                android:textColor="@color/brand_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/more_purchase_contact"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- 卡片3：社交账号 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginEnd="16dp"
+            android:background="@drawable/bg_card_rounded"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="6dp"
+                android:text="社交账号"
+                android:textColor="@color/brand_primary"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/more_purchase_ks"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:lineSpacingExtra="3dp"
+                android:text="@string/more_purchase_xhs"
                 android:textColor="@color/text_secondary"
                 android:textSize="12sp" />
         </LinearLayout>

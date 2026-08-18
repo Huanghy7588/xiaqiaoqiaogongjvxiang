@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 21,
-    "versionName": "1.1.9",
-    "updateLog": "v1.1.9 素材水印大图预览修复 + 更多页说明：\n1. 修复素材水印工具「大图预览」把原图拉伸成手机比例的问题，现按原图真实比例（1:1/竖长/横图）居中显示，水印位置同步保持原图坐标不拉伸\n2. 更多页「投稿功能/优化功能」下方新增购买说明文字条（字帖小助手为收费软件，工具箱为公开软件，并附联系方式）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.1.9/app-release.apk",
+    "versionCode": 22,
+    "versionName": "1.2.0",
+    "updateLog": "v1.2.0 更多页说明排版优化：\n1. 把「字帖小助手」购买说明从一坨长正文拆成 3 张独立卡片：软件性质、购买联系、社交账号，各讲一个点、互不挤在一起，与上方「投稿功能」卡片也完全分开\n2. 修复素材水印大图预览按原图真实比例显示（不拉伸）的改动一并随本版上线",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.0/app-release.apk",
     "forceUpdate": false
   }
 }
