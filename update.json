@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 23,
-    "versionName": "1.2.1",
-    "updateLog": "v1.2.1 更多页字帖说明文案调整：\n1. 顶部新增醒目绿字条「夏乔乔工具箱为公开免费软件」\n2. 「社交账号」改为「视频账号」，KS 改为「快手」（夏乔乔 快手：qaq3089095785）\n3. 删除原「工具箱为公开软件，字帖小助手为收费软件」一句",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.1/app-release.apk",
+    "versionCode": 24,
+    "versionName": "1.2.2",
+    "updateLog": "v1.2.2 无中生有表格改版：\n1. 序号改为连续数字，各大项整体加浅色底块（相邻交替浅绿/浅蓝），更醒目\n2. 英雄/皮肤名合并为一个输入框（用 / 分隔），表格中英雄/皮肤合并为一行显示\n3. 表格去掉「蓝方/红方」行，改为每列表头按所选边染红/蓝\n4. 英雄色卡处删除红方/蓝方说明文字；巅峰框图片选项移到数字输入之前\n5. 生成表格整体缩小约 1/3，格子更紧凑",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.2/app-release.apk",
     "forceUpdate": false
   }
 }

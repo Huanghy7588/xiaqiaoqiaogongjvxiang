@@ -99,8 +99,13 @@ public class PersonData implements Serializable {
         public String text;         // 文字（可为 null）
         public String imageAsset;   // assets 图片路径（可为 null）
         public Integer textColor;   // 文字颜色（null = 默认黑色）
+        public String text2;        // 第二行文字（可为 null，用于"英雄/皮肤"合并行）
+        public Integer text2Color;  // 第二行文字颜色
         public Cell(String t, String img) { text = t; imageAsset = img; }
         public Cell(String t, String img, Integer color) { text = t; imageAsset = img; textColor = color; }
+        public Cell(String t, String img, Integer color, String t2, Integer c2) {
+            text = t; imageAsset = img; textColor = color; text2 = t2; text2Color = c2;
+        }
     }
 
     /** 表格行 */
@@ -127,17 +132,23 @@ public class PersonData implements Serializable {
     public static final int COLOR_BLUE = 0xFF1565C0;   // 蓝方队伍色
     public static final int COLOR_GOLD = 0xFFFF8F00;   // 金色
 
-    /**
-     * 根据颜色选择返回带颜色的 Cell 文字。
-     * @param text  英雄或皮肤名
-     * @param color 0=队伍色(红/蓝), 1=金色
-     * @param side  0=蓝方, 1=红方
-     */
-    private Cell colorize(String text, int color, int side) {
-        String t = text == null ? "" : text;
-        if (color == 1) return new Cell(t, null, COLOR_GOLD);
-        if (color == 0) return new Cell(t, null, side == 1 ? COLOR_RED : COLOR_BLUE);
-        return new Cell(t, null);
+    /** 色卡颜色：0=队伍色(红/蓝)，1=金色，未选=黑色 */
+    private Integer colorOf(int color) {
+        if (color == 1) return COLOR_GOLD;
+        if (color == 0) return side == 1 ? COLOR_RED : COLOR_BLUE;
+        return null;
+    }
+
+    /** 英雄/皮肤合并单元格：第一行英雄名（英雄色卡着色），第二行皮肤名（皮肤色卡着色） */
+    private Cell heroSkinCell() {
+        String h = hero == null ? "" : hero.trim();
+        String s = skin == null ? "" : skin.trim();
+        Cell c = new Cell(h.isEmpty() ? null : h, null, colorOf(heroColor));
+        if (!s.isEmpty()) {
+            c.text2 = s;
+            c.text2Color = colorOf(skinColor);
+        }
+        return c;
     }
 
     /** 选填项标签（固定顺序，供渲染器做行并集） */
@@ -147,17 +158,15 @@ public class PersonData implements Serializable {
     public List<Row> computeRows(int mode) {
         List<Row> rows = new ArrayList<>();
 
-        // ①
-        rows.add(new Row("蓝方/红方", new Cell(side == 0 ? "蓝方" : side == 1 ? "红方" : "", null)));
+        // ① 蓝方/红方不再单独成行：表格里改由每列表头按所选边染红/蓝
         // ② 英雄色卡、皮肤色卡
         String teamColorName = side == 1 ? "红色" : side == 0 ? "蓝色" : "";
         rows.add(new Row("英雄色卡", new Cell(
                 heroColor == 1 ? "金色" : heroColor == 0 ? teamColorName : "", null)));
         rows.add(new Row("皮肤色卡", new Cell(
                 skinColor == 1 ? "金色" : skinColor == 0 ? teamColorName : "", null)));
-        // ③ 英雄、皮肤（文字按色卡颜色渲染）
-        rows.add(new Row("英雄", colorize(hero, heroColor, side)));
-        rows.add(new Row("皮肤", colorize(skin, skinColor, side)));
+        // ③ 英雄/皮肤合并成一行（两行文字，各自按色卡着色）
+        rows.add(new Row("英雄/皮肤", heroSkinCell()));
         rows.add(new Row("ID名", new Cell(idName == null ? "" : idName, null)));
         if (idBar == 1) rows.add(new Row("ID条", new Cell("有ID条", null)));
 

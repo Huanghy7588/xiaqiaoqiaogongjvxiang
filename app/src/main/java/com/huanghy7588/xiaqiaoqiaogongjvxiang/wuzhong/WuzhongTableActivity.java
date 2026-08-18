@@ -49,7 +49,7 @@ import java.util.concurrent.Executors;
 /**
  * 无中生有表格：首页入口。
  * 模式（排位/娱乐）→ 每个人物（左一/左二…）填写必填项 → 添加人物 → 选填项（每人一份）→ 导出到相册。
- * 图片选项直接以图片网格贴在表单上，点图即选；序号按人物内连续编号（每个人物从①开始）。
+ * 图片选项直接以图片网格贴在表单上，点图即选；序号按人物内连续编号（1. 2. 3. …）。
  */
 public class WuzhongTableActivity extends Activity {
 
@@ -66,9 +66,6 @@ public class WuzhongTableActivity extends Activity {
     private static final int REQ_STORAGE = 2001;
     /** 权限授予后要执行的保存动作（S4 修复：pre-Q 需要运行时请求存储权限） */
     private Runnable pendingStorageAction;
-
-    /** 带圈序号，按人物内顺序动态编号（1 开始连续） */
-    private static final String[] CIRCLED = {"①", "②", "③", "④", "⑤", "⑥", "⑦", "⑧", "⑨", "⑩"};
 
     /** W6 修复：asset 缩略图缓存，避免 renderPersons 每次全量重载图片 */
     private final LruCache<String, Bitmap> assetCache = new LruCache<String, Bitmap>(64) {
@@ -202,37 +199,35 @@ public class WuzhongTableActivity extends Activity {
         }
         card.addView(head);
 
-        int[] sec = {0}; // 模式内连续编号计数器
+        int[] sec = {0}; // 模式内连续编号计数器（1. 2. 3. …）
 
-        // ① 蓝方/红方
-        card.addView(sectionTitle(sec, "蓝方/红方"));
-        card.addView(choiceButtons(new String[]{"蓝方", "红方"}, p.side, i -> { p.side = i; renderPersons(); }));
+        // 1. 蓝方/红方（表格里改由表头染色表现，不再单独成行）
+        LinearLayout s1 = sectionBox(sec, "蓝方/红方");
+        s1.addView(choiceButtons(new String[]{"蓝方", "红方"}, p.side, i -> { p.side = i; renderPersons(); }));
+        card.addView(s1);
 
-        // ② 英雄色卡、皮肤色卡（根据队伍显示对应颜色按钮）
-        card.addView(sectionTitle(sec, "英雄色卡、皮肤色卡"));
+        // 2. 英雄色卡、皮肤色卡（不再显示红方/蓝方说明文字）
+        LinearLayout s2 = sectionBox(sec, "英雄色卡、皮肤色卡");
         String teamColorLabel = p.side == 1 ? "红色" : "蓝色";
-        TextView colorTip = subTitle("红方：选 红色 或 金色\n蓝方：选 蓝色 或 金色\n（英雄与皮肤可分别选色）");
-        colorTip.setTextColor(Color.parseColor("#F57F17"));
-        card.addView(colorTip);
-        card.addView(subTitle("英雄色卡"));
-        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.heroColor, i -> { p.heroColor = i; renderPersons(); }));
-        card.addView(subTitle("皮肤色卡"));
-        card.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.skinColor, i -> { p.skinColor = i; renderPersons(); }));
+        s2.addView(subTitle("英雄色卡"));
+        s2.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.heroColor, i -> { p.heroColor = i; renderPersons(); }));
+        s2.addView(subTitle("皮肤色卡"));
+        s2.addView(choiceButtons(new String[]{teamColorLabel, "金色"}, p.skinColor, i -> { p.skinColor = i; renderPersons(); }));
+        card.addView(s2);
 
-        // ③ 英雄、皮肤 + ID名 + ID条
-        card.addView(sectionTitle(sec, "英雄、皮肤"));
-        card.addView(subTitle("英雄"));
-        card.addView(makeEdit("请输入英雄名", p.hero, s -> p.hero = s));
-        card.addView(subTitle("皮肤"));
-        card.addView(makeEdit("请输入皮肤名", p.skin, s -> p.skin = s));
-        card.addView(sectionTitle("ID名"));
-        card.addView(makeEdit("请输入ID名", p.idName, s -> p.idName = s));
+        // 3. 英雄/皮肤名（合并为一个输入框，用 / 分隔）
+        LinearLayout s3 = sectionBox(sec, "英雄/皮肤名");
+        s3.addView(makeEdit("请输入英雄名/皮肤名（用 / 分隔）", heroSkinJoined(p), s -> splitHeroSkin(p, s)));
+        card.addView(s3);
 
+        // 4. ID名（独立大项，含 ID 条选择）
+        LinearLayout s4 = sectionBox(sec, "ID名");
+        s4.addView(makeEdit("请输入ID名", p.idName, s -> p.idName = s));
         // 是否需要 ID 条：左一选"是"(idBar=1) → 其他人强制"否"并锁定；左一未选/选"否" → 其他人可自由选择
         boolean idBarBlocked = idx > 0 && persons.get(0).idBar == 1;
         if (idBarBlocked) p.idBar = 0;
-        card.addView(subTitle("是否需要 ID 条？"));
-        card.addView(choiceButtons(new String[]{"是", "否"},
+        s4.addView(subTitle("是否需要 ID 条？"));
+        s4.addView(choiceButtons(new String[]{"是", "否"},
                 p.idBar == 1 ? 0 : (p.idBar == 0 ? 1 : -1),
                 i -> {
                     p.idBar = (i == 0) ? 1 : 0;
@@ -245,104 +240,109 @@ public class WuzhongTableActivity extends Activity {
         if (idBarBlocked) {
             TextView lock = subTitle("左一已有 ID 条，其他人不能再选");
             lock.setTextColor(Color.parseColor("#BDBDBD"));
-            card.addView(lock);
+            s4.addView(lock);
         }
+        card.addView(s4);
 
-        // ③ 熟练度/标
-        card.addView(sectionTitle(sec, "熟练度 / 标"));
-        card.addView(choiceButtons(new String[]{"熟练度", "标"}, p.profMode, i -> { p.profMode = i; renderPersons(); }));
+        // 5. 熟练度/标
+        LinearLayout s5 = sectionBox(sec, "熟练度 / 标");
+        s5.addView(choiceButtons(new String[]{"熟练度", "标"}, p.profMode, i -> { p.profMode = i; renderPersons(); }));
         if (p.profMode == 0) {
             // 熟练度图片直接贴上来，点图即选
-            card.addView(subTitle("熟练度图片（点图选择）"));
-            card.addView(imageGrid(PersonData.F_PROFICIENCY, p.profImage, null, path -> p.profImage = path));
+            s5.addView(subTitle("熟练度图片（点图选择）"));
+            s5.addView(imageGrid(PersonData.F_PROFICIENCY, p.profImage, null, path -> p.profImage = path));
         } else if (p.profMode == 1) {
-            card.addView(subTitle("带光效 / 不带光效"));
-            card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.badgeGlow, i -> { p.badgeGlow = i; renderPersons(); }));
-            card.addView(subTitle("标等级"));
-            card.addView(choiceButtons(PersonData.BADGE_LEVEL, p.badgeLevel, i -> {
+            s5.addView(subTitle("带光效 / 不带光效"));
+            s5.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.badgeGlow, i -> { p.badgeGlow = i; renderPersons(); }));
+            s5.addView(subTitle("标等级"));
+            s5.addView(choiceButtons(PersonData.BADGE_LEVEL, p.badgeLevel, i -> {
                 p.badgeLevel = i;
                 // W2 修复：选中国标(4)时清空 badgeNum，避免切回非国标时旧"50强"重新出现
                 if (i == 4) p.badgeNum = "";
                 renderPersons();
             }));
             if (p.badgeLevel != 4) { // 国标不带 50强/100强/数字标
-                card.addView(subTitle("50强 / 100强 / 数字标"));
-                card.addView(makeEdit("如：50强 / 100强 / 数字", p.badgeNum, s -> p.badgeNum = s));
+                s5.addView(subTitle("50强 / 100强 / 数字标"));
+                s5.addView(makeEdit("如：50强 / 100强 / 数字", p.badgeNum, s -> p.badgeNum = s));
             }
         }
+        card.addView(s5);
 
-        // ④ 框
-        card.addView(sectionTitle(sec, "框"));
-        card.addView(choiceButtons(new String[]{"段位框", "巅峰框"}, p.frameType, i -> { p.frameType = i; renderPersons(); }));
+        // 6. 框
+        LinearLayout s6 = sectionBox(sec, "框");
+        s6.addView(choiceButtons(new String[]{"段位框", "巅峰框"}, p.frameType, i -> { p.frameType = i; renderPersons(); }));
         if (p.frameType == 0) { // 段位框
-            card.addView(subTitle("段位"));
-            card.addView(choiceButtons(PersonData.RANK_FRAME, p.rankFrame, i -> { p.rankFrame = i; renderPersons(); }));
+            s6.addView(subTitle("段位"));
+            s6.addView(choiceButtons(PersonData.RANK_FRAME, p.rankFrame, i -> { p.rankFrame = i; renderPersons(); }));
             if (p.rankFrame == 9) { // 百星
-                card.addView(subTitle("百星带光效 / 不带光效"));
-        card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.rankFrameGlow, i -> { p.rankFrameGlow = i; renderPersons(); }));
+                s6.addView(subTitle("百星带光效 / 不带光效"));
+                s6.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.rankFrameGlow, i -> { p.rankFrameGlow = i; renderPersons(); }));
             }
-            card.addView(subTitle("是否选择框的角标？"));
-            card.addView(choiceButtons(new String[]{"是", "否"}, p.frameBadge, i -> { p.frameBadge = i; renderPersons(); }));
+            s6.addView(subTitle("是否选择框的角标？"));
+            s6.addView(choiceButtons(new String[]{"是", "否"}, p.frameBadge, i -> { p.frameBadge = i; renderPersons(); }));
             if (p.frameBadge == 0) {
-                card.addView(subTitle("角标类型"));
-                card.addView(choiceButtons(new String[]{"天梯排名", "巅峰角标"}, p.frameBadgeType, i -> { p.frameBadgeType = i; renderPersons(); }));
+                s6.addView(subTitle("角标类型"));
+                s6.addView(choiceButtons(new String[]{"天梯排名", "巅峰角标"}, p.frameBadgeType, i -> { p.frameBadgeType = i; renderPersons(); }));
                 if (p.frameBadgeType == 0) {
-                    card.addView(subTitle("天梯排名"));
-                    card.addView(imageGrid(PersonData.F_TRANSLATION_LADDER,
+                    s6.addView(subTitle("天梯排名"));
+                    s6.addView(imageGrid(PersonData.F_TRANSLATION_LADDER,
                             p.ladderImage >= 0 ? PersonData.F_TRANSLATION_LADDER + "/" + (p.ladderImage + 1) + ".jpg" : null,
                             null, path -> p.ladderImage = parseIndex(path)));
-                    card.addView(makeEdit("请输入天梯排名", p.ladderRank, s -> p.ladderRank = s));
+                    s6.addView(makeEdit("请输入天梯排名", p.ladderRank, s -> p.ladderRank = s));
                 } else if (p.frameBadgeType == 1) {
-                    card.addView(subTitle("巅峰角标版本"));
-                    card.addView(choiceButtons(new String[]{"新版", "旧版"}, p.peakBadgeVer, i -> { p.peakBadgeVer = i; renderPersons(); }));
+                    s6.addView(subTitle("巅峰角标版本"));
+                    s6.addView(choiceButtons(new String[]{"新版", "旧版"}, p.peakBadgeVer, i -> { p.peakBadgeVer = i; renderPersons(); }));
                     if (p.peakBadgeVer >= 0) {
                         String[] filter = (p.peakBadgeVer == 0)
                                 ? new String[]{"1.5", "1.6", "1.7"}
                                 : new String[]{"1.1", "1.2", "1.3", "1.4"};
-                        card.addView(subTitle("巅峰角标（点图选择）"));
-                        card.addView(imageGrid(PersonData.F_BADGE, p.peakBadgeImage, filter, path -> p.peakBadgeImage = path));
+                        s6.addView(subTitle("巅峰角标（点图选择）"));
+                        s6.addView(imageGrid(PersonData.F_BADGE, p.peakBadgeImage, filter, path -> p.peakBadgeImage = path));
                     }
                 }
             }
-        } else if (p.frameType == 1) { // 巅峰框
-            card.addView(subTitle("巅峰数字"));
-            card.addView(makeEdit("请输入巅峰数字", p.peakNumber, s -> p.peakNumber = s));
-            card.addView(subTitle("巅峰框（点图选择）"));
-            card.addView(imageGrid(PersonData.F_PEAK_FRAME, p.peakFrameImage, null, path -> p.peakFrameImage = path));
+        } else if (p.frameType == 1) { // 巅峰框：图片选项在前，巅峰数字输入在后
+            s6.addView(subTitle("巅峰框（点图选择）"));
+            s6.addView(imageGrid(PersonData.F_PEAK_FRAME, p.peakFrameImage, null, path -> p.peakFrameImage = path));
+            s6.addView(subTitle("巅峰数字"));
+            s6.addView(makeEdit("请输入巅峰数字", p.peakNumber, s -> p.peakNumber = s));
         }
+        card.addView(s6);
 
-        // ⑤ 贵族标
-        card.addView(sectionTitle(sec, "贵族标"));
-        card.addView(choiceButtons(PersonData.NOBLE, p.nobleLevel, i -> { p.nobleLevel = i; renderPersons(); }));
+        // 7. 贵族标
+        LinearLayout s7 = sectionBox(sec, "贵族标");
+        s7.addView(choiceButtons(PersonData.NOBLE, p.nobleLevel, i -> { p.nobleLevel = i; renderPersons(); }));
         if (p.nobleLevel >= 6) { // V7-V10 / 传承
-            card.addView(subTitle("带光效 / 不带光效"));
-        card.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.nobleGlow, i -> { p.nobleGlow = i; renderPersons(); }));
+            s7.addView(subTitle("带光效 / 不带光效"));
+            s7.addView(choiceButtons(new String[]{"带光效", "不带光效"}, p.nobleGlow, i -> { p.nobleGlow = i; renderPersons(); }));
         }
         if (p.nobleLevel == 9) {
-            card.addView(subTitle("V10 样式（点图选择）"));
-            card.addView(imageGrid(PersonData.F_NOBLE10, p.noble10Image, null, path -> p.noble10Image = path));
+            s7.addView(subTitle("V10 样式（点图选择）"));
+            s7.addView(imageGrid(PersonData.F_NOBLE10, p.noble10Image, null, path -> p.noble10Image = path));
         } else if (p.nobleLevel == 10) {
-            card.addView(subTitle("传承标样式（点图选择）"));
-            card.addView(imageGrid(PersonData.F_PASS_DOWN, p.passDownImage, null, path -> p.passDownImage = path));
+            s7.addView(subTitle("传承标样式（点图选择）"));
+            s7.addView(imageGrid(PersonData.F_PASS_DOWN, p.passDownImage, null, path -> p.passDownImage = path));
         }
+        card.addView(s7);
 
-        // ⑥ 亲密关系
-        card.addView(sectionTitle(sec, "亲密关系"));
-        card.addView(choiceButtons(PersonData.RELATION, p.relationType, i -> { p.relationType = i; renderPersons(); }));
+        // 8. 亲密关系
+        LinearLayout s8 = sectionBox(sec, "亲密关系");
+        s8.addView(choiceButtons(PersonData.RELATION, p.relationType, i -> { p.relationType = i; renderPersons(); }));
         if (p.relationType != 7 && p.relationType != 8) {
-            card.addView(subTitle("等级"));
-            card.addView(makeEdit("请输入等级", p.relationLevel, s -> p.relationLevel = s));
+            s8.addView(subTitle("等级"));
+            s8.addView(makeEdit("请输入等级", p.relationLevel, s -> p.relationLevel = s));
         }
+        card.addView(s8);
 
-        // ⑦ 召唤师技能：技能全部用图片选择，另保留"其他"文字
-        card.addView(sectionTitle(sec, "召唤师技能"));
+        // 9. 召唤师技能：技能全部用图片选择，另保留"其他"文字
+        LinearLayout s9 = sectionBox(sec, "召唤师技能");
         if (p.summonerOtherMode) p.summonerImage = null;
-        card.addView(imageGrid(PersonData.F_SKILL, p.summonerImage, null, path -> {
+        s9.addView(imageGrid(PersonData.F_SKILL, p.summonerImage, null, path -> {
             p.summonerImage = path;
             p.summonerOtherMode = false;
             renderPersons();
         }));
-        card.addView(subTitle("或选择其他技能"));
+        s9.addView(subTitle("或选择其他技能"));
         // 把"其他"做成跟图片选项一样大小的按钮（72dp），不再用 choiceButtons
         GridLayout otherGrid = new GridLayout(this);
         otherGrid.setColumnCount(4);
@@ -383,40 +383,41 @@ public class WuzhongTableActivity extends Activity {
             renderPersons();
         });
         otherGrid.addView(otherCell);
-        card.addView(otherGrid);
+        s9.addView(otherGrid);
         if (p.summonerOtherMode) {
-            card.addView(makeEdit("请输入其他技能", p.summonerOther, s -> p.summonerOther = s));
+            s9.addView(makeEdit("请输入其他技能", p.summonerOther, s -> p.summonerOther = s));
         }
+        card.addView(s9);
 
-        // ⑧ 加载进度（娱乐模式）
+        // 10. 加载进度（娱乐模式）/ 分路（排位模式）
         if (mode == PersonData.MODE_FUN) {
-            card.addView(sectionTitle(sec, "加载进度"));
-            card.addView(choiceButtons(new String[]{"100%", "其他进度"}, p.loadMode, i -> { p.loadMode = i; renderPersons(); }));
+            LinearLayout s10 = sectionBox(sec, "加载进度");
+            s10.addView(choiceButtons(new String[]{"100%", "其他进度"}, p.loadMode, i -> { p.loadMode = i; renderPersons(); }));
             if (p.loadMode == 1) {
-                card.addView(makeEdit("若有其他进度", p.loadText, s -> p.loadText = s));
+                s10.addView(makeEdit("若有其他进度", p.loadText, s -> p.loadText = s));
             }
+            card.addView(s10);
         }
-
-        // ⑧ 分路（排位模式）
         if (mode == PersonData.MODE_RANK) {
-            card.addView(sectionTitle(sec, "分路"));
-            card.addView(choiceButtons(new String[]{"分路排名", "分路段数"}, p.laneMode, i -> { p.laneMode = i; renderPersons(); }));
+            LinearLayout s10 = sectionBox(sec, "分路");
+            s10.addView(choiceButtons(new String[]{"分路排名", "分路段数"}, p.laneMode, i -> { p.laneMode = i; renderPersons(); }));
             if (p.laneMode == 1) {
-                card.addView(subTitle("分路段数"));
-                card.addView(choiceButtons(PersonData.LANE_TIER, p.laneTier, i -> { p.laneTier = i; renderPersons(); }));
-                card.addView(subTitle("段数样式（点图选择）"));
-                card.addView(imageGrid(PersonData.F_ROLE_TIER,
+                s10.addView(subTitle("分路段数"));
+                s10.addView(choiceButtons(PersonData.LANE_TIER, p.laneTier, i -> { p.laneTier = i; renderPersons(); }));
+                s10.addView(subTitle("段数样式（点图选择）"));
+                s10.addView(imageGrid(PersonData.F_ROLE_TIER,
                         p.laneTierImage >= 0 ? PersonData.F_ROLE_TIER + "/" + (p.laneTierImage + 1) + ".png" : null,
                         null, path -> p.laneTierImage = parseIndex(path)));
             } else if (p.laneMode == 0) {
-                card.addView(subTitle("排名样式（点图选择）"));
-                card.addView(imageGrid(PersonData.F_LANE_RANKING,
+                s10.addView(subTitle("排名样式（点图选择）"));
+                s10.addView(imageGrid(PersonData.F_LANE_RANKING,
                         p.laneRankImage >= 0 ? PersonData.F_LANE_RANKING + "/" + (p.laneRankImage + 1) + ".png" : null,
                         null, path -> p.laneRankImage = parseIndex(path)));
             }
+            card.addView(s10);
         }
 
-        // 选填项（每个人物一份，✓/✗）
+        // 选填项（每个人物一份，✓/✗，不加序号、不套底色块）
         card.addView(sectionTitle("选填项（需要就打勾）"));
         card.addView(toggleRow("铭记之石", p.opt.memoryStone, b -> p.opt.memoryStone = b));
         card.addView(toggleRow("英雄签名", p.opt.heroSign, b -> p.opt.heroSign = b));
@@ -426,34 +427,63 @@ public class WuzhongTableActivity extends Activity {
         return card;
     }
 
-    /** 序号节标题：带圈数字自动连续递增；相邻大项交替配色，视觉上明显分段 */
-    private TextView sectionTitle(int[] counter, String text) {
+    /** 带序号大项容器：浅色背景从标题延伸到大项全部选项；相邻大项交替浅绿/浅蓝；序号用连续阿拉伯数字 */
+    private LinearLayout sectionBox(int[] counter, String text) {
         int n = counter[0]++;
-        String prefix = (n < CIRCLED.length) ? CIRCLED[n] : (n + 1) + ".";
-        TextView tv = new TextView(this);
-        tv.setText(prefix + " " + text);
-        tv.setTextSize(15);
-        tv.setTypeface(null, android.graphics.Typeface.BOLD);
-        // 偶数项浅绿底深绿字，奇数项浅蓝底深蓝字，交替不重样
+        boolean even = n % 2 == 0;
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
         GradientDrawable bg = new GradientDrawable();
-        bg.setCornerRadius(dp(6));
-        if (n % 2 == 0) {
-            bg.setColor(Color.parseColor("#E8F5E9"));
-            tv.setTextColor(Color.parseColor("#1B5E20"));
-        } else {
-            bg.setColor(Color.parseColor("#E3F2FD"));
-            tv.setTextColor(Color.parseColor("#0D47A1"));
-        }
-        tv.setBackground(bg);
-        tv.setPadding(dp(10), dp(8), dp(10), dp(8));
+        bg.setCornerRadius(dp(10));
+        bg.setColor(Color.parseColor(even ? "#E8F5E9" : "#E3F2FD")); // 偶数浅绿、奇数浅蓝
+        box.setBackground(bg);
+        box.setPadding(dp(10), dp(8), dp(10), dp(8));
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        lp.setMargins(0, dp(14), 0, dp(6));
-        tv.setLayoutParams(lp);
-        return tv;
+        lp.setMargins(0, dp(10), 0, 0);
+        box.setLayoutParams(lp);
+
+        TextView title = new TextView(this);
+        title.setText((n + 1) + ". " + text);
+        title.setTextSize(15);
+        title.setTypeface(null, android.graphics.Typeface.BOLD);
+        GradientDrawable tb = new GradientDrawable();
+        tb.setCornerRadius(dp(6));
+        if (even) {
+            tb.setColor(Color.parseColor("#C8E6C9"));
+            title.setTextColor(Color.parseColor("#1B5E20"));
+        } else {
+            tb.setColor(Color.parseColor("#BBDEFB"));
+            title.setTextColor(Color.parseColor("#0D47A1"));
+        }
+        title.setBackground(tb);
+        title.setPadding(dp(10), dp(6), dp(10), dp(6));
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        tlp.setMargins(0, 0, 0, dp(2));
+        title.setLayoutParams(tlp);
+        box.addView(title);
+        return box;
     }
 
-    /** 普通节标题（无序号，用于 ID名 / 选填项等附属区块） */
+    /** 英雄/皮肤合并输入框当前文本：英雄名/皮肤名 */
+    private String heroSkinJoined(PersonData p) {
+        String h = p.hero == null ? "" : p.hero.trim();
+        String s = p.skin == null ? "" : p.skin.trim();
+        if (h.isEmpty()) return s;
+        if (s.isEmpty()) return h;
+        return h + "/" + s;
+    }
+
+    /** 合并输入框内容拆分回英雄/皮肤（用 / 分隔） */
+    private void splitHeroSkin(PersonData p, String raw) {
+        if (raw == null) raw = "";
+        String[] parts = raw.split("/");
+        p.hero = parts.length > 0 ? parts[0].trim() : "";
+        p.skin = parts.length > 1 ? parts[1].trim() : "";
+    }
+
+    /** 普通节标题（无序号，用于选填项等附属区块） */
     private TextView sectionTitle(String text) {
         TextView tv = new TextView(this);
         tv.setText(text);

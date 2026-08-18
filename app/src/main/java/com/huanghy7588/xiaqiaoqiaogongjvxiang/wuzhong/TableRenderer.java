@@ -22,12 +22,12 @@ import java.util.Map;
  */
 public class TableRenderer {
 
-    private static final float BASE_W = 1000f;      // 基准宽（大幅缩窄，约为原来一半）
-    private static final float BASE_LABEL_W = 220f; // 标签列缩窄
-    private static final float BASE_HEADER_H = 100f;
-    private static final float BASE_TEXT_ROW_H = 120f;
-    private static final float BASE_MAX_IMG_H = 160f;  // 图片最大高度缩小
-    private static final float BASE_PAD = 10f;
+    private static final float BASE_W = 1000f;      // 基准宽（保持参考宽度，格子整体缩小约 1/3）
+    private static final float BASE_LABEL_W = 145f; // 标签列
+    private static final float BASE_HEADER_H = 66f;
+    private static final float BASE_TEXT_ROW_H = 80f;
+    private static final float BASE_MAX_IMG_H = 106f;  // 图片最大高度
+    private static final float BASE_PAD = 7f;
 
     /** 渲染宽度由调用方指定：导出 2500，页面内嵌预览用小图省内存 */
     public Bitmap render(List<PersonData> persons, int mode, int imgW) {
@@ -96,7 +96,7 @@ public class TableRenderer {
                             tw = sz.w * scale;
                         }
                         h = Math.max(h, (int) ih + pad * 2
-                                + (c.text != null && !c.text.isEmpty() ? Math.round(50 * s) : 0));
+                                + (c.text != null && !c.text.isEmpty() ? Math.round(33 * s) : 0));
                     }
                 }
             }
@@ -110,11 +110,18 @@ public class TableRenderer {
         Canvas cv = new Canvas(bmp);
         cv.drawColor(Color.WHITE);
 
-        // 表头
+        // 表头：项目标签保持绿色；每个人物列表头按所选边染红/蓝（替代表格里的蓝方/红方行）
         cv.drawRect(0, 0, imgW, headerH, pHeaderBg);
-        drawCellText(cv, "项目", 0, 0, labelW, headerH, 32 * s, true, pad, null);
+        drawCellText(cv, "项目", 0, 0, labelW, headerH, 22 * s, true, pad, null);
         for (int i = 0; i < n; i++) {
-            drawCellText(cv, "左" + (i + 1), labelW + i * personW, 0, personW, headerH, 32 * s, true, pad, null);
+            Paint ph = new Paint();
+            int side = persons.get(i).side;
+            if (side == 1) ph.setColor(Color.parseColor("#D32F2F"));        // 红方
+            else if (side == 0) ph.setColor(Color.parseColor("#1565C0"));   // 蓝方
+            else ph.setColor(Color.parseColor("#4CAF50"));                  // 未选保持绿
+            int hx = labelW + i * personW;
+            cv.drawRect(hx, 0, hx + personW, headerH, ph);
+            drawCellText(cv, "左" + (i + 1), hx, 0, personW, headerH, 22 * s, true, pad, null);
         }
         cv.drawLine(0, headerH, imgW, headerH, pLine);
 
@@ -128,7 +135,7 @@ public class TableRenderer {
             String label = labels.get(r);
             // 标签列
             cv.drawRect(0, y, labelW, y + h, pLabelBg);
-            drawCellText(cv, label, 0, y, labelW, h, 28 * s, false, pad, null);
+            drawCellText(cv, label, 0, y, labelW, h, 19 * s, false, pad, null);
             // 竖向分隔线
             cv.drawLine(labelW, y, labelW, y + h, pLine);
             // 人物列
@@ -182,16 +189,27 @@ public class TableRenderer {
                           Map<String, Bitmap> assetCache) {
         if (c == null) return;
         boolean hasImg = c.imageAsset != null;
-        boolean hasText = c.text != null && !c.text.isEmpty();
-        int textZone = Math.min(Math.round(50 * s), h / 3);
+        boolean hasT1 = c.text != null && !c.text.isEmpty();
+        boolean hasT2 = c.text2 != null && !c.text2.isEmpty();
+        boolean hasText = hasT1 || hasT2;
+        int textZone = Math.min(Math.round(33 * s), h / 3);
         if (hasImg && hasText) {
-            // 文字在上，图片在下
-            drawCellText(cv, c.text, x, y, w, textZone, 26 * s, false, pad, c.textColor);
+            // 文字在上，图片在下（两行文字时用合并行绘制）
+            if (hasT1 && hasT2) {
+                drawTwoLineText(cv, c.text, c.textColor, c.text2, c.text2Color, x, y, w, textZone, 16 * s, pad);
+            } else {
+                drawCellText(cv, hasT1 ? c.text : c.text2, x, y, w, textZone, 18 * s, false, pad,
+                        hasT1 ? c.textColor : c.text2Color);
+            }
             drawCellImage(cv, c.imageAsset, x, y + textZone, w, h - textZone, pad, maxImgH, assetCache);
         } else if (hasImg) {
             drawCellImage(cv, c.imageAsset, x, y, w, h, pad, maxImgH, assetCache);
+        } else if (hasT1 && hasT2) {
+            // 英雄/皮肤合并行：两行文字各自着色
+            drawTwoLineText(cv, c.text, c.textColor, c.text2, c.text2Color, x, y, w, h, 18 * s, pad);
         } else if (hasText) {
-            drawCellText(cv, c.text, x, y, w, h, 30 * s, false, pad, c.textColor);
+            drawCellText(cv, hasT1 ? c.text : c.text2, x, y, w, h, 20 * s, false, pad,
+                    hasT1 ? c.textColor : c.text2Color);
         }
     }
 
@@ -232,6 +250,28 @@ public class TableRenderer {
         Paint.FontMetrics fm = paint.getFontMetrics();
         float baseline = y + (h - (fm.ascent + fm.descent)) / 2f - fm.ascent;
         cv.drawText(text, x + w / 2f, baseline, paint);
+    }
+
+    /** 单元格内两行文字（英雄名/皮肤名），各自着色，整体垂直居中 */
+    private void drawTwoLineText(Canvas cv, String l1, Integer c1, String l2, Integer c2,
+                                 int x, int y, int w, int h, float size, int pad) {
+        if (l1 == null || l2 == null) return;
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTextSize(size);
+        float maxW = w - pad * 2;
+        while ((paint.measureText(l1) > maxW || paint.measureText(l2) > maxW)
+                && paint.getTextSize() > 12f) {
+            paint.setTextSize(paint.getTextSize() - 1);
+        }
+        Paint.FontMetrics fm = paint.getFontMetrics();
+        float lineH = fm.descent - fm.ascent;
+        float centerY = y + h / 2f;
+        int black = Color.parseColor("#212121");
+        paint.setColor(c1 == null ? black : c1);
+        cv.drawText(l1, x + w / 2f, centerY - lineH / 2f - fm.ascent, paint);
+        paint.setColor(c2 == null ? black : c2);
+        cv.drawText(l2, x + w / 2f, centerY + lineH / 2f - fm.ascent, paint);
     }
 
     private Size imgSize(String asset) {
