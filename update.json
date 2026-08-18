@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 22,
-    "versionName": "1.2.0",
-    "updateLog": "v1.2.0 更多页说明排版优化：\n1. 把「字帖小助手」购买说明从一坨长正文拆成 3 张独立卡片：软件性质、购买联系、社交账号，各讲一个点、互不挤在一起，与上方「投稿功能」卡片也完全分开\n2. 修复素材水印大图预览按原图真实比例显示（不拉伸）的改动一并随本版上线",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.0/app-release.apk",
+    "versionCode": 23,
+    "versionName": "1.2.1",
+    "updateLog": "v1.2.1 更多页字帖说明文案调整：\n1. 顶部新增醒目绿字条「夏乔乔工具箱为公开免费软件」\n2. 「社交账号」改为「视频账号」，KS 改为「快手」（夏乔乔 快手：qaq3089095785）\n3. 删除原「工具箱为公开软件，字帖小助手为收费软件」一句",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.1/app-release.apk",
     "forceUpdate": false
   }
 }

@@ -115,7 +115,7 @@
 
         <!-- 字帖小助手说明：拆成多张卡片，每张只讲一个点，避免信息糊成一坨 -->
 
-        <!-- 卡片1：软件性质 -->
+        <!-- 卡片0：工具箱性质说明（绿色醒目） -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -127,24 +127,16 @@
             android:padding="16dp">
 
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="6dp"
-                android:text="@string/more_purchase_title"
-                android:textColor="@color/brand_primary"
-                android:textSize="14sp"
-                android:textStyle="bold" />
-
-            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:lineSpacingExtra="3dp"
-                android:text="@string/more_purchase_publish"
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp" />
+                android:gravity="center"
+                android:text="@string/more_toolbox_free"
+                android:textColor="@color/brand_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- 卡片2：购买联系方式 -->
+        <!-- 卡片1：购买联系方式 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -173,7 +165,7 @@
                 android:textSize="12sp" />
         </LinearLayout>
 
-        <!-- 卡片3：社交账号 -->
+        <!-- 卡片3：视频账号 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -188,7 +180,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="6dp"
-                android:text="社交账号"
+                android:text="视频账号"
                 android:textColor="@color/brand_primary"
                 android:textSize="14sp"
                 android:textStyle="bold" />

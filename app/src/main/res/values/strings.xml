@@ -71,10 +71,9 @@
     <string name="more_contact_label">投稿功能/优化功能：</string>
     <string name="more_qq_number">QQ3089096785</string>
     <string name="more_qq_hint">长按QQ号可以直接复制哦</string>
-    <string name="more_purchase_title">字帖小助手（收费软件）</string>
-    <string name="more_purchase_publish">夏乔乔工具箱为公开软件，字帖小助手为收费软件</string>
+    <string name="more_toolbox_free">夏乔乔工具箱为公开免费软件</string>
     <string name="more_purchase_contact">购买字帖小助手软件，请联系夏乔乔 3089096785</string>
-    <string name="more_purchase_ks">夏乔乔 ks：qaq3089095785</string>
+    <string name="more_purchase_ks">夏乔乔 快手：qaq3089095785</string>
     <string name="more_purchase_xhs">夏乔乔 小红书：sh5087526</string>
     <string name="more_qq_copied">已复制QQ号，快去粘贴吧</string>
     <string name="more_donate_hint">制作不易，打赏均用于后续软件的更新与维护</string>
