@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 29,
-    "versionName": "1.2.7",
-    "updateLog": "v1.2.7 贴膜水印机水印与缩放修复：\n1. 修复仅放 1 张底图时缩略图空白（GridLayout 单格缺权重导致宽度 0），现单张占满整行正常显示\n2. 水印/底纹改为密集平铺：单块短边=底图短边×0.3，沿整图重复铺满，全图覆盖（不再是只放一两个被拉大的怪水印）\n3. 小水印在「不透明度」下方新增「缩放」滑块，范围 -100%~+100%（默认 0%=原大小，+放大/-缩小）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.7/app-release.apk",
+    "versionCode": 30,
+    "versionName": "1.2.8",
+    "updateLog": "v1.2.8 贴膜水印机水印平铺逻辑修正：\n1. 水印/底纹改为真正的「重复/平铺」（与爱笔思画重复功能一致）：底图竖比或正方时水印宽度=底图宽度、纵向重复铺满；底图横比时水印高度=底图高度、横向重复铺满，未覆盖处一块块复制粘贴铺满全图\n2. 修复此前把水印拉大只放一两块的怪异显示",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.8/app-release.apk",
     "forceUpdate": false
   }
 }

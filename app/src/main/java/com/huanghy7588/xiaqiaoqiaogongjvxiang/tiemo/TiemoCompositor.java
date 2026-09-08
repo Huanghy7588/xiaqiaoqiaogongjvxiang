@@ -10,8 +10,11 @@ import android.graphics.RectF;
  * 贴膜水印机合成核心。
  *
  * 图层顺序（从底到顶）：图片(底图) → 水印 → 底纹 → 小水印。
- * - 水印、底纹：按"短边对齐"平铺铺满整张底图（水印多长，就沿长边重复铺，保证无缝覆盖）。
- * - 小水印：单张，默认居中，可调节 X/Y 偏移。
+ * - 水印、底纹：按"重复/平铺"铺满整张底图（类似爱笔思画重复功能）：
+ *     底图竖比或正方时，水印宽度 = 底图宽度，沿纵向重复；
+ *     底图横比时，水印高度 = 底图高度，沿横向重复；
+ *     未覆盖处一块块复制粘贴过去，密铺全图。
+ * - 小水印：单张，默认居中，可调节 X/Y 偏移与缩放。
  * - 每种叠加层均可选择混合模式（标准/覆盖/软光/滤色）与不透明度。
  * - 合成结果尺寸、质量与底图完全一致，仅在原图上叠加，不做任何缩放或压缩重采样。
  */
@@ -22,9 +25,6 @@ public class TiemoCompositor {
      * 0=标准(SRC_OVER)  1=覆盖(OVERLAY)  2=软光(SOFT_LIGHT)  3=滤色(SCREEN)
      */
     public static final int[] BLEND_INDEX = {0, 1, 2, 3};
-
-    /** 平铺密度：单块水印短边 = 底图短边 * 该系数。越小越密（铺满全图）。 */
-    private static final float TILE_DENSITY = 0.3f;
 
     /** 单个叠加层输入 */
     public static class LayerInput {
@@ -93,21 +93,23 @@ public class TiemoCompositor {
         p.setAlpha(Math.round(layer.opacity * 255f));
 
         if (layer.tiled) {
-            // 密集平铺：缩放水印，使其短边 = 底图短边 * TILE_DENSITY（保持水印自身比例），
-            // 再沿长边重复铺满整张图，保证全图覆盖。
-            int baseShort = Math.min(W, H);
-            int ovShort = Math.min(ovW, ovH);
-            float s = ((float) baseShort / ovShort) * TILE_DENSITY;
+            // 重复/平铺（类似爱笔思画重复功能）：
+            // 底图竖比或正方 -> 水印宽度 = 底图宽度，纵向重复铺满；
+            // 底图横比     -> 水印高度 = 底图高度，横向重复铺满。
+            // 未覆盖处一块块复制粘贴过去，密铺整图（保持水印自身比例）。
+            float s;
+            if (H >= W) {
+                s = (float) W / ovW;          // 水印宽度对齐底图宽度
+            } else {
+                s = (float) H / ovH;          // 水印高度对齐底图高度
+            }
             int tw = Math.max(1, Math.round(ovW * s));
             int th = Math.max(1, Math.round(ovH * s));
-            // 计算行列数，确保完整覆盖；整网格居中铺放，左右/上下对称
             int cols = (int) Math.ceil((double) W / tw);
             int rows = (int) Math.ceil((double) H / th);
-            int startX = (W - cols * tw) / 2;
-            int startY = (H - rows * th) / 2;
             for (int r = 0; r < rows; r++) {
                 for (int c = 0; c < cols; c++) {
-                    off.drawBitmap(overlay, startX + c * tw, startY + r * th, p);
+                    off.drawBitmap(overlay, c * tw, r * th, p);
                 }
             }
         } else {
