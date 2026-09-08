@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 26,
-    "versionName": "1.2.4",
-    "updateLog": "v1.2.4 贴膜水印机界面优化：\n1. 顶部「清图」改为醒目红色实心按钮，行内「清图」改为红色描边按钮，与绿色「添加/保存/生成」形成清晰层级\n2. 各卡片标题加左侧绿色色条，必选标签变绿、选填保持灰色，层级更分明\n3. 预览区加圆角边框，卡片内边距统一加大，整体更精致",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.4/app-release.apk",
+    "versionCode": 27,
+    "versionName": "1.2.5",
+    "updateLog": "v1.2.5 贴膜水印机布局修复：\n1. 修复叠加层卡片被 FrameLayout 叠放导致「水印/底纹」被「小水印」遮挡、只显示小水印选项的问题，现水印→底纹→小水印三张卡片按序正常显示\n2. 已导入底图缩略图放大（3列96dp 改为 2列150dp），预览更接近预览效果区，不再显得小而挤",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.5/app-release.apk",
     "forceUpdate": false
   }
 }

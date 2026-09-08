@@ -224,7 +224,7 @@ public class TiemoEditorActivity extends AppCompatActivity {
 
             ImageView iv = new ImageView(this);
             iv.setLayoutParams(new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, dp(96)));
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(150)));
             iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
             iv.setBackgroundResource(android.R.color.darker_gray);
             Bitmap bmp = TiemoUtils.decodeUri(this, uri, 200);

@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:columnCount="3"
+                android:columnCount="2"
                 android:visibility="gone" />
 
             <TextView
@@ -114,11 +114,12 @@
                 android:textSize="13sp" />
         </LinearLayout>
 
-        <!-- 叠加层卡片容器（代码中依次 inflate 水印 / 底纹 / 小水印） -->
-        <FrameLayout
+        <!-- 叠加层卡片容器（代码中依次 inflate 水印 / 底纹 / 小水印，纵向排列） -->
+        <LinearLayout
             android:id="@+id/container_layers"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
 
         <!-- 预览 -->
         <LinearLayout
