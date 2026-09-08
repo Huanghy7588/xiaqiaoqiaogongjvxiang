@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 28,
-    "versionName": "1.2.6",
-    "updateLog": "v1.2.6 贴膜水印机底图预览修复：\n1. 仅放 1 张竖比例图片时，缩略图由「裁切(CENTER_CROP)」改为整图完整显示(FIT_CENTER)并占满整行，不再被裁成一条而显示不全；多张时仍用两列网格缩略（裁切，体验已可接受）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.6/app-release.apk",
+    "versionCode": 29,
+    "versionName": "1.2.7",
+    "updateLog": "v1.2.7 贴膜水印机水印与缩放修复：\n1. 修复仅放 1 张底图时缩略图空白（GridLayout 单格缺权重导致宽度 0），现单张占满整行正常显示\n2. 水印/底纹改为密集平铺：单块短边=底图短边×0.3，沿整图重复铺满，全图覆盖（不再是只放一两个被拉大的怪水印）\n3. 小水印在「不透明度」下方新增「缩放」滑块，范围 -100%~+100%（默认 0%=原大小，+放大/-缩小）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.7/app-release.apk",
     "forceUpdate": false
   }
 }

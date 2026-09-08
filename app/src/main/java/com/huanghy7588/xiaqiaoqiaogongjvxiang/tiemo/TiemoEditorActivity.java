@@ -55,6 +55,7 @@ public class TiemoEditorActivity extends AppCompatActivity {
         boolean tiled = true;   // 平铺？小水印为 false
         float xFrac = 0.5f;     // 小水印中心 X
         float yFrac = 0.5f;     // 小水印中心 Y
+        int scalePercent = 0;   // 小水印缩放：-100..100（0=原大小，+放大/-缩小）
         boolean hasImage() { return uri != null; }
     }
 
@@ -74,6 +75,9 @@ public class TiemoEditorActivity extends AppCompatActivity {
         LinearLayout xyRow;
         SeekBar sbX;
         SeekBar sbY;
+        LinearLayout scaleRow;
+        SeekBar sbScale;
+        TextView tvScaleVal;
     }
 
     // 数据
@@ -222,7 +226,7 @@ public class TiemoEditorActivity extends AppCompatActivity {
             GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
             lp.width = 0;
             if (single) {
-                lp.columnSpec = GridLayout.spec(0, 2); // 单张占满整行
+                lp.columnSpec = GridLayout.spec(0, 2, 1f); // 单张占满整行（带权重撑满宽度，避免空白）
             } else {
                 lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
             }
@@ -282,6 +286,9 @@ public class TiemoEditorActivity extends AppCompatActivity {
         h.xyRow = card.findViewById(R.id.layer_xy);
         h.sbX = card.findViewById(R.id.sb_layer_x);
         h.sbY = card.findViewById(R.id.sb_layer_y);
+        h.scaleRow = card.findViewById(R.id.layer_scale);
+        h.sbScale = card.findViewById(R.id.sb_layer_scale);
+        h.tvScaleVal = card.findViewById(R.id.tv_layer_scale_val);
 
         ((TextView) card.findViewById(R.id.tv_layer_title)).setText(titleRes);
         TextView tagView = card.findViewById(R.id.tv_layer_tag);
@@ -350,6 +357,20 @@ public class TiemoEditorActivity extends AppCompatActivity {
             h.sbY.setProgress((int) (state.yFrac * 100));
             h.sbX.setOnSeekBarChangeListener(simpleProgress(p -> { state.xFrac = p / 100f; rebuildPreview(); }));
             h.sbY.setOnSeekBarChangeListener(simpleProgress(p -> { state.yFrac = p / 100f; rebuildPreview(); }));
+
+            // 缩放（仅小水印）：-100..100，默认 0（原大小）
+            h.scaleRow.setVisibility(View.VISIBLE);
+            h.sbScale.setProgress(state.scalePercent + 100); // SeekBar 0..200，100=原大小
+            h.tvScaleVal.setText(state.scalePercent + "%");
+            h.sbScale.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override public void onProgressChanged(SeekBar sb, int p, boolean fromUser) {
+                    state.scalePercent = p - 100;
+                    h.tvScaleVal.setText(state.scalePercent + "%");
+                    rebuildPreview();
+                }
+                @Override public void onStartTrackingTouch(SeekBar sb) {}
+                @Override public void onStopTrackingTouch(SeekBar sb) {}
+            });
         }
 
         updateLayerThumb(h, state);
@@ -427,6 +448,7 @@ public class TiemoEditorActivity extends AppCompatActivity {
         in.tiled = tiled;
         in.xFrac = s.xFrac;
         in.yFrac = s.yFrac;
+        in.scale = 1 + s.scalePercent / 100f;
         return in;
     }
 
@@ -479,7 +501,7 @@ public class TiemoEditorActivity extends AppCompatActivity {
                         tex.blendIndex = texture.blendIndex; tex.opacity = texture.opacity; tex.tiled = true; }
                     if (smallBmp != null) { sm = new TiemoCompositor.LayerInput(); sm.overlay = smallBmp;
                         sm.blendIndex = small.blendIndex; sm.opacity = small.opacity; sm.tiled = false;
-                        sm.xFrac = small.xFrac; sm.yFrac = small.yFrac; }
+                        sm.xFrac = small.xFrac; sm.yFrac = small.yFrac; sm.scale = 1 + small.scalePercent / 100f; }
                     Bitmap result = TiemoCompositor.composite(base, wm, tex, sm);
                     base.recycle();
                     if (result != null) {

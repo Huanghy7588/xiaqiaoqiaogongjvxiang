@@ -107,6 +107,7 @@
     <string name="tiemo_collapse">收起</string>
     <string name="tiemo_blend">混合模式</string>
     <string name="tiemo_opacity">不透明度</string>
+    <string name="tiemo_scale">缩放</string>
     <string name="tiemo_blend_normal">标准</string>
     <string name="tiemo_blend_overlay">覆盖</string>
     <string name="tiemo_blend_softlight">软光</string>

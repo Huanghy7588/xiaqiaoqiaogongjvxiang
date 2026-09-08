@@ -23,6 +23,9 @@ public class TiemoCompositor {
      */
     public static final int[] BLEND_INDEX = {0, 1, 2, 3};
 
+    /** 平铺密度：单块水印短边 = 底图短边 * 该系数。越小越密（铺满全图）。 */
+    private static final float TILE_DENSITY = 0.3f;
+
     /** 单个叠加层输入 */
     public static class LayerInput {
         public Bitmap overlay;            // 已解码的水印/底纹/小水印图（可空）
@@ -31,6 +34,7 @@ public class TiemoCompositor {
         public boolean tiled = true;     // true=平铺铺满；false=单张（小水印）
         public float xFrac = 0.5f;       // 仅单张有效：中心 X（占底图宽度比例）
         public float yFrac = 0.5f;       // 仅单张有效：中心 Y（占底图高度比例）
+        public float scale = 1.0f;       // 仅单张有效：缩放倍数（1=原大小）
 
         public boolean hasImage() {
             return overlay != null && !overlay.isRecycled();
@@ -89,10 +93,11 @@ public class TiemoCompositor {
         p.setAlpha(Math.round(layer.opacity * 255f));
 
         if (layer.tiled) {
-            // 短边对齐：缩放水印，使其短边 = 底图短边（保持水印自身比例）
+            // 密集平铺：缩放水印，使其短边 = 底图短边 * TILE_DENSITY（保持水印自身比例），
+            // 再沿长边重复铺满整张图，保证全图覆盖。
             int baseShort = Math.min(W, H);
             int ovShort = Math.min(ovW, ovH);
-            float s = (float) baseShort / ovShort;
+            float s = ((float) baseShort / ovShort) * TILE_DENSITY;
             int tw = Math.max(1, Math.round(ovW * s));
             int th = Math.max(1, Math.round(ovH * s));
             // 计算行列数，确保完整覆盖；整网格居中铺放，左右/上下对称
@@ -106,10 +111,10 @@ public class TiemoCompositor {
                 }
             }
         } else {
-            // 单张：短边取底图短边的 40%，居中（或按 X/Y 偏移）放置
+            // 单张（小水印）：短边取底图短边的 40%，再按 scale 缩放，居中（或按 X/Y 偏移）放置
             int baseShort = Math.min(W, H);
             int ovShort = Math.min(ovW, ovH);
-            float target = baseShort * 0.4f;
+            float target = baseShort * 0.4f * layer.scale;
             float s = target / ovShort;
             int dw = Math.max(1, Math.round(ovW * s));
             int dh = Math.max(1, Math.round(ovH * s));
