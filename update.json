@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 27,
-    "versionName": "1.2.5",
-    "updateLog": "v1.2.5 贴膜水印机布局修复：\n1. 修复叠加层卡片被 FrameLayout 叠放导致「水印/底纹」被「小水印」遮挡、只显示小水印选项的问题，现水印→底纹→小水印三张卡片按序正常显示\n2. 已导入底图缩略图放大（3列96dp 改为 2列150dp），预览更接近预览效果区，不再显得小而挤",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.5/app-release.apk",
+    "versionCode": 28,
+    "versionName": "1.2.6",
+    "updateLog": "v1.2.6 贴膜水印机底图预览修复：\n1. 仅放 1 张竖比例图片时，缩略图由「裁切(CENTER_CROP)」改为整图完整显示(FIT_CENTER)并占满整行，不再被裁成一条而显示不全；多张时仍用两列网格缩略（裁切，体验已可接受）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.6/app-release.apk",
     "forceUpdate": false
   }
 }

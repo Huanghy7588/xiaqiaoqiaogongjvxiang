@@ -212,20 +212,28 @@ public class TiemoEditorActivity extends AppCompatActivity {
         findViewById(R.id.btn_image_clear).setVisibility(has ? View.VISIBLE : View.GONE);
         tvImageCount.setText(getString(R.string.tiemo_image) + " (" + baseUris.size() + ")");
 
+        // 单张时整图完整显示（不裁切），多张时两列网格裁切缩略（用户已接受）
+        final boolean single = baseUris.size() == 1;
+
         for (int i = 0; i < baseUris.size(); i++) {
             final int idx = i;
             Uri uri = baseUris.get(i);
             FrameLayout fl = new FrameLayout(this);
             GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
             lp.width = 0;
-            lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            if (single) {
+                lp.columnSpec = GridLayout.spec(0, 2); // 单张占满整行
+            } else {
+                lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            }
             lp.setMargins(0, 0, 0, 10);
             fl.setLayoutParams(lp);
 
             ImageView iv = new ImageView(this);
             iv.setLayoutParams(new FrameLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, dp(150)));
-            iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                    ViewGroup.LayoutParams.MATCH_PARENT, single ? dp(260) : dp(150)));
+            // 单张用 FIT_CENTER 完整显示（竖图不再被裁成一条）；多张用 CENTER_CROP 填满格子
+            iv.setScaleType(single ? ImageView.ScaleType.FIT_CENTER : ImageView.ScaleType.CENTER_CROP);
             iv.setBackgroundResource(android.R.color.darker_gray);
             Bitmap bmp = TiemoUtils.decodeUri(this, uri, 200);
             iv.setImageBitmap(bmp);
