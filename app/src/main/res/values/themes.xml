@@ -26,6 +26,26 @@
         <item name="backgroundTint">@color/brand_primary</item>
     </style>
 
+    <!-- 大号红色按钮（清图 / 危险操作，最显眼） -->
+    <style name="Widget.XiaQiaoQiao.Button.Danger" parent="Widget.MaterialComponents.Button">
+        <item name="android:textSize">18sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="backgroundTint">@color/brand_danger</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <!-- 红色描边按钮（行内清图等次级危险操作） -->
+    <style name="Widget.XiaQiaoQiao.Button.DangerOutline" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="android:textSize">13sp</item>
+        <item name="cornerRadius">10dp</item>
+        <item name="android:minHeight">36dp</item>
+        <item name="strokeColor">@color/brand_danger</item>
+        <item name="android:textColor">@color/brand_danger</item>
+        <item name="rippleColor">@color/brand_danger_tint</item>
+    </style>
+
     <!-- 打赏弹窗主题：全屏 + 透明背景 -->
     <style name="Theme.XiaQiaoQiao.DonateDialog" parent="Theme.MaterialComponents.Light.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>

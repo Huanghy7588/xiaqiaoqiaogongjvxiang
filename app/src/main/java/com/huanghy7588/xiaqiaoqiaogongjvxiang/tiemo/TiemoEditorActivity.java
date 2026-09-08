@@ -276,8 +276,10 @@ public class TiemoEditorActivity extends AppCompatActivity {
         h.sbY = card.findViewById(R.id.sb_layer_y);
 
         ((TextView) card.findViewById(R.id.tv_layer_title)).setText(titleRes);
-        ((TextView) card.findViewById(R.id.tv_layer_tag))
-                .setText(required ? R.string.tiemo_required : R.string.tiemo_optional);
+        TextView tagView = card.findViewById(R.id.tv_layer_tag);
+        tagView.setText(required ? R.string.tiemo_required : R.string.tiemo_optional);
+        tagView.setTextColor(required ? ContextCompat.getColor(this, R.color.brand_primary)
+                : ContextCompat.getColor(this, R.color.text_secondary));
 
         // 折叠逻辑
         if (collapsible) {

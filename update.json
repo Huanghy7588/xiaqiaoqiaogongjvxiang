@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 25,
-    "versionName": "1.2.3",
-    "updateLog": "v1.2.3 新增「贴膜水印机」：\n1. 首页新增贴膜水印机入口，进入后是文件夹首页（可新建/重命名/删除，点击查看文件夹内图片）\n2. 编辑主页支持底图+水印（必选）+底纹+小水印（选填，默认收起）多层合成\n3. 水印/底纹/小水印可选标准/覆盖/软光/滤色混合模式并调不透明度；小水印可调节 X/Y 位置（默认居中）\n4. 平铺合成：水印按短边对齐铺满底图，底图/底纹同逻辑，合成后保持原图尺寸与质量\n5. 预览框按原图比例自适应（竖图按高、横图按宽、1:1 原样）；生成全部合成全部底图，保存全部导出到相册；顶部保存可存到已有或新建文件夹",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.3/app-release.apk",
+    "versionCode": 26,
+    "versionName": "1.2.4",
+    "updateLog": "v1.2.4 贴膜水印机界面优化：\n1. 顶部「清图」改为醒目红色实心按钮，行内「清图」改为红色描边按钮，与绿色「添加/保存/生成」形成清晰层级\n2. 各卡片标题加左侧绿色色条，必选标签变绿、选填保持灰色，层级更分明\n3. 预览区加圆角边框，卡片内边距统一加大，整体更精致",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.4/app-release.apk",
     "forceUpdate": false
   }
 }
