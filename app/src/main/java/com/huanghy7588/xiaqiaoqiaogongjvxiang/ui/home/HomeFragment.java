@@ -11,12 +11,13 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoFolderActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.WuzhongTableActivity;
 
 /**
  * 首页 Fragment：展示功能入口列表。
- * 当前包含"素材水印工具"，点击进入对应功能页。
+ * 当前包含"素材水印工具"、"无中生有表格"与"贴膜水印机"，点击进入对应功能页。
  */
 public class HomeFragment extends Fragment {
 
@@ -37,6 +38,13 @@ public class HomeFragment extends Fragment {
         View wuzhongCard = root.findViewById(R.id.card_wuzhong);
         wuzhongCard.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), WuzhongTableActivity.class);
+            startActivity(intent);
+        });
+
+        // 点击贴膜水印机卡片
+        View tiemoCard = root.findViewById(R.id.card_tiemo);
+        tiemoCard.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), TiemoFolderActivity.class);
             startActivity(intent);
         });
 

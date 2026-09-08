@@ -50,6 +50,27 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XiaQiaoQiao" />
 
+        <!-- 贴膜水印机：文件夹首页 -->
+        <activity
+            android:name=".tiemo.TiemoFolderActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
+        <!-- 贴膜水印机：编辑主页 -->
+        <activity
+            android:name=".tiemo.TiemoEditorActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
+        <!-- 贴膜水印机：文件夹图片查看 -->
+        <activity
+            android:name=".tiemo.TiemoGalleryActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
         <!-- 大图预览：全屏黑底 -->
         <activity
             android:name=".watermark.PreviewActivity"

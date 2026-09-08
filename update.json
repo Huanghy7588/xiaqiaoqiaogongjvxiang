@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 24,
-    "versionName": "1.2.2",
-    "updateLog": "v1.2.2 无中生有表格改版：\n1. 序号改为连续数字，各大项整体加浅色底块（相邻交替浅绿/浅蓝），更醒目\n2. 英雄/皮肤名合并为一个输入框（用 / 分隔），表格中英雄/皮肤合并为一行显示\n3. 表格去掉「蓝方/红方」行，改为每列表头按所选边染红/蓝\n4. 英雄色卡处删除红方/蓝方说明文字；巅峰框图片选项移到数字输入之前\n5. 生成表格整体缩小约 1/3，格子更紧凑",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.2/app-release.apk",
+    "versionCode": 25,
+    "versionName": "1.2.3",
+    "updateLog": "v1.2.3 新增「贴膜水印机」：\n1. 首页新增贴膜水印机入口，进入后是文件夹首页（可新建/重命名/删除，点击查看文件夹内图片）\n2. 编辑主页支持底图+水印（必选）+底纹+小水印（选填，默认收起）多层合成\n3. 水印/底纹/小水印可选标准/覆盖/软光/滤色混合模式并调不透明度；小水印可调节 X/Y 位置（默认居中）\n4. 平铺合成：水印按短边对齐铺满底图，底图/底纹同逻辑，合成后保持原图尺寸与质量\n5. 预览框按原图比例自适应（竖图按高、横图按宽、1:1 原样）；生成全部合成全部底图，保存全部导出到相册；顶部保存可存到已有或新建文件夹",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.3/app-release.apk",
     "forceUpdate": false
   }
 }

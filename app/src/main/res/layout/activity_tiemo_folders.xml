@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 贴膜水印机：文件夹首页 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <include layout="@layout/include_top_bar" />
+
+        <GridView
+            android:id="@+id/grid_folders"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_margin="12dp"
+            android:columnWidth="150dp"
+            android:gravity="center"
+            android:horizontalSpacing="12dp"
+            android:numColumns="auto_fit"
+            android:verticalSpacing="12dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tv_folder_empty"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/tiemo_folder_empty"
+            android:textColor="@color/text_secondary"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <!-- 右下角加号 -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fab_add"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="20dp"
+        android:contentDescription="@string/tiemo_new_folder"
+        android:src="@android:drawable/ic_input_add"
+        android:tint="@android:color/white" />
+</FrameLayout>
