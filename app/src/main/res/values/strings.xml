@@ -133,6 +133,14 @@
     <string name="tiemo_save_title">保存到文件夹</string>
     <string name="tiemo_save_pick_hint">选择已有文件夹，或输入新名称后保存</string>
     <string name="tiemo_export_fail">保存失败，请稍后重试</string>
+    <string name="tiemo_open_preset">打开预设</string>
+    <string name="tiemo_preset_title">保存预设</string>
+    <string name="tiemo_preset_pick_hint">选择已有预设，或输入新名称后保存</string>
+    <string name="tiemo_preset_empty">请先导入图片或水印再保存预设</string>
+    <string name="tiemo_preset_saved">已保存预设「%1$s」</string>
+    <string name="tiemo_open_preset_title">打开预设</string>
+    <string name="tiemo_no_preset">还没有保存的预设</string>
+    <string name="tiemo_preset_loaded">已载入预设「%1$s」</string>
 
     <!-- 二维码工具 -->
     <string name="tool_qr">二维码工具</string>

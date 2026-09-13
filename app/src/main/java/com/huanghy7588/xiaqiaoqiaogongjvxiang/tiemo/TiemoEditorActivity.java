@@ -34,7 +34,15 @@ import androidx.core.content.ContextCompat;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,7 +51,7 @@ import java.util.List;
  *
  * 图层（从底到顶）：图片(必选) → 水印(必选) → 底纹(选填,默认收起) → 小水印(选填,默认收起)。
  * 水印/底纹按短边对齐平铺铺满；小水印单张居中(可偏移)。
- * 顶部：清图 / 保存(保存到文件夹，可新建或已有)；底部：生成全部(合成所有图片) / 保存全部(到相册)。
+ * 顶部：清图 / 保存到文件夹(把底图+水印+底纹+小水印的参数与图片打包成预设) / 打开预设；底部：生成全部(合成所有图片) / 保存全部(到相册)。
  */
 public class TiemoEditorActivity extends AppCompatActivity {
 
@@ -177,8 +185,8 @@ public class TiemoEditorActivity extends AppCompatActivity {
                     .setNegativeButton(R.string.cancel, null)
                     .show();
         });
-        findViewById(R.id.btn_save_top).setOnClickListener(v ->
-                ensureGeneratedThen(this::showSaveToFolderDialog));
+        findViewById(R.id.btn_save_top).setOnClickListener(v -> showSavePresetDialog());
+        findViewById(R.id.btn_open_preset).setOnClickListener(v -> showOpenPresetDialog());
     }
 
     private void clearAll() {
@@ -599,15 +607,10 @@ public class TiemoEditorActivity extends AppCompatActivity {
         Toast.makeText(this, getString(R.string.tiemo_saved_album, ok), Toast.LENGTH_LONG).show();
     }
 
-    // ==================== 保存到文件夹 ====================
-    private void ensureGeneratedThen(Runnable after) {
-        if (!generatedFiles.isEmpty()) { after.run(); return; }
-        generateAll(after, () -> {});
-    }
-
-    private void showSaveToFolderDialog() {
-        if (generatedFiles.isEmpty()) {
-            Toast.makeText(this, R.string.tiemo_no_results, Toast.LENGTH_SHORT).show();
+    // ==================== 预设（保存 / 打开 参数 + 图片） ====================
+    private void showSavePresetDialog() {
+        if (baseUris.isEmpty() && !watermark.hasImage() && !texture.hasImage() && !small.hasImage()) {
+            Toast.makeText(this, R.string.tiemo_preset_empty, Toast.LENGTH_SHORT).show();
             return;
         }
         View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_tiemo_folder, null);
@@ -616,25 +619,25 @@ public class TiemoEditorActivity extends AppCompatActivity {
         TextView tvExistingLabel = dialogView.findViewById(R.id.tv_existing_label);
         LinearLayout layoutExisting = dialogView.findViewById(R.id.layout_existing);
 
-        tvHint.setText(R.string.tiemo_save_title);
-        tvExistingLabel.setText(R.string.tiemo_save_pick_hint);
+        tvHint.setText(R.string.tiemo_preset_title);
+        tvExistingLabel.setText(R.string.tiemo_preset_pick_hint);
 
-        // 列出已有文件夹，点击填入名称
-        List<TiemoUtils.FolderInfo> folders = TiemoUtils.listFolders(this);
-        for (TiemoUtils.FolderInfo info : folders) {
+        // 列出已有预设，点击填入名称（覆盖保存）
+        List<String> presets = TiemoUtils.listPresets(this);
+        for (String name : presets) {
             Button b = new Button(this, null, android.R.attr.buttonStyle);
-            b.setText(info.name);
+            b.setText(name);
             b.setAllCaps(false);
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             lp.bottomMargin = dp(6);
             b.setLayoutParams(lp);
-            b.setOnClickListener(v -> et.setText(info.name));
+            b.setOnClickListener(v -> et.setText(name));
             layoutExisting.addView(b);
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle(R.string.tiemo_save_title)
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.tiemo_preset_title)
                 .setView(dialogView)
                 .setPositiveButton(R.string.confirm, (d, w) -> {
                     String name = et.getText().toString().trim();
@@ -642,24 +645,152 @@ public class TiemoEditorActivity extends AppCompatActivity {
                         Toast.makeText(this, R.string.tiemo_folder_name_hint, Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    saveGeneratedToFolder(name);
+                    savePresetToFolder(name);
                 })
                 .setNegativeButton(R.string.cancel, null)
                 .show();
     }
 
-    private void saveGeneratedToFolder(String folderName) {
-        File dir = TiemoUtils.getFolderDir(this, folderName);
+    /** 把当前底图 + 各层（水印/底纹/小水印）的参数与图片打包保存为预设 */
+    private void savePresetToFolder(String name) {
+        File dir = TiemoUtils.getPresetDir(this, name);
+        if (dir.exists()) TiemoUtils.deleteRecursively(dir);   // 覆盖旧预设
         dir.mkdirs();
-        boolean existed = dir.listFiles() != null && dir.listFiles().length > 0;
-        int ok = 0;
-        for (int i = 0; i < generatedFiles.size(); i++) {
-            File dest = new File(dir, "tiemo_" + System.currentTimeMillis() + "_" + i + ".png");
-            if (TiemoUtils.copyFile(generatedFiles.get(i), dest)) ok++;
+        try {
+            JSONObject root = new JSONObject();
+            root.put("v", 1);
+
+            // 底图
+            JSONArray baseArr = new JSONArray();
+            for (int i = 0; i < baseUris.size(); i++) {
+                String ext = extOf(TiemoUtils.getUriDisplayName(this, baseUris.get(i)));
+                String fname = "b" + i + ext;
+                if (TiemoUtils.copyUriToFile(this, baseUris.get(i), dir, fname) != null) {
+                    baseArr.put(fname);
+                }
+            }
+            root.put("base", baseArr);
+
+            if (watermark.hasImage()) root.put("watermark", layerToJson(dir, "wm", watermark));
+            if (texture.hasImage()) root.put("texture", layerToJson(dir, "tex", texture));
+            if (small.hasImage()) root.put("small", layerToJson(dir, "small", small));
+
+            try (FileWriter fw = new FileWriter(new File(dir, "preset.json"))) {
+                fw.write(root.toString());
+            }
+            Toast.makeText(this, getString(R.string.tiemo_preset_saved, name), Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, R.string.tiemo_export_fail, Toast.LENGTH_SHORT).show();
         }
-        String msg = existed ? getString(R.string.tiemo_folder_exists, folderName)
-                : getString(R.string.tiemo_saved_folder, ok, folderName);
-        Toast.makeText(this, getString(R.string.tiemo_saved_to_folder, ok, folderName), Toast.LENGTH_LONG).show();
+    }
+
+    private JSONObject layerToJson(File dir, String prefix, LayerState state) throws JSONException {
+        String ext = extOf(TiemoUtils.getUriDisplayName(this, state.uri));
+        String fname = prefix + ext;
+        TiemoUtils.copyUriToFile(this, state.uri, dir, fname);
+        JSONObject o = new JSONObject();
+        o.put("f", fname);
+        o.put("blend", state.blendIndex);
+        o.put("op", state.opacity);
+        o.put("tiled", state.tiled);
+        o.put("x", state.xFrac);
+        o.put("y", state.yFrac);
+        o.put("scale", state.scalePercent);
+        return o;
+    }
+
+    private String extOf(String displayName) {
+        if (displayName != null) {
+            int dot = displayName.lastIndexOf('.');
+            if (dot > 0 && dot < displayName.length() - 1) {
+                String e = displayName.substring(dot).toLowerCase();
+                if (e.matches("\\.[a-z0-9]{1,5}")) return e;
+            }
+        }
+        return ".png";
+    }
+
+    private void showOpenPresetDialog() {
+        List<String> presets = TiemoUtils.listPresets(this);
+        if (presets.isEmpty()) {
+            Toast.makeText(this, R.string.tiemo_no_preset, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String[] items = presets.toArray(new String[0]);
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.tiemo_open_preset_title)
+                .setItems(items, (d, which) -> loadPreset(presets.get(which)))
+                .setNegativeButton(R.string.cancel, null)
+                .show();
+    }
+
+    /** 载入预设：恢复底图 + 各层参数与图片，并刷新 UI/预览 */
+    private void loadPreset(String name) {
+        File dir = TiemoUtils.getPresetDir(this, name);
+        File jsonFile = new File(dir, "preset.json");
+        if (!jsonFile.exists()) return;
+        try {
+            StringBuilder sb = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new FileReader(jsonFile))) {
+                String line;
+                while ((line = br.readLine()) != null) sb.append(line);
+            }
+            JSONObject root = new JSONObject(sb.toString());
+
+            // 清空当前
+            baseUris.clear();
+            watermark.uri = null; texture.uri = null; small.uri = null;
+            previewBaseBmp = null; previewWmBmp = null; previewTexBmp = null; previewSmallBmp = null;
+            clearGenerated();
+
+            // 底图
+            JSONArray baseArr = root.optJSONArray("base");
+            if (baseArr != null) {
+                for (int i = 0; i < baseArr.length(); i++) {
+                    File f = new File(dir, baseArr.getString(i));
+                    if (f.exists()) baseUris.add(Uri.fromFile(f));
+                }
+            }
+
+            // 各层（小水印才需要同步 X/Y/缩放 UI）
+            if (root.has("watermark")) applyLayerFromJson(dir, root.getJSONObject("watermark"), watermark, wmHolder, false);
+            if (root.has("texture")) applyLayerFromJson(dir, root.getJSONObject("texture"), texture, texHolder, false);
+            if (root.has("small")) applyLayerFromJson(dir, root.getJSONObject("small"), small, smallHolder, true);
+
+            buildBaseThumbs();
+            updateLayerThumb(wmHolder, watermark);
+            updateLayerThumb(texHolder, texture);
+            updateLayerThumb(smallHolder, small);
+            rebuildPreview();
+            Toast.makeText(this, getString(R.string.tiemo_preset_loaded, name), Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(this, R.string.tiemo_export_fail, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void applyLayerFromJson(File dir, JSONObject obj, LayerState state, LayerHolder holder, boolean showXY) throws JSONException {
+        File f = new File(dir, obj.getString("f"));
+        if (!f.exists()) return;
+        state.uri = Uri.fromFile(f);
+        state.blendIndex = obj.optInt("blend", 0);
+        state.opacity = (float) obj.optDouble("op", 1.0);
+        state.tiled = obj.optBoolean("tiled", true);
+        state.xFrac = (float) obj.optDouble("x", 0.5);
+        state.yFrac = (float) obj.optDouble("y", 0.5);
+        state.scalePercent = obj.optInt("scale", 0);
+
+        if (holder.rgBlend.getChildCount() > state.blendIndex)
+            holder.rgBlend.check(holder.rgBlend.getChildAt(state.blendIndex).getId());
+        holder.sbOpacity.setProgress((int) (state.opacity * 100));
+        holder.tvOpacityVal.setText((int) (state.opacity * 100) + "%");
+        if (showXY) {
+            holder.sbX.setProgress((int) (state.xFrac * 100));
+            holder.sbY.setProgress((int) (state.yFrac * 100));
+            holder.sbScale.setProgress(state.scalePercent + 100);
+            holder.tvScaleVal.setText(state.scalePercent + "%");
+        }
     }
 
     // ==================== 工具 ====================

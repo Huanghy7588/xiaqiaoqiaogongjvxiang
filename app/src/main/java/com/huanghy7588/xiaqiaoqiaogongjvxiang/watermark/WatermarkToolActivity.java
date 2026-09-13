@@ -503,10 +503,10 @@ public class WatermarkToolActivity extends AppCompatActivity {
         }).start();
     }
 
-    /** 导出单张图片（限制最大 4096px 宽度防止 OOM） */
+    /** 导出单张图片：按原图尺寸 1:1 导出，不做宽度/像素上限限制（仅极端超大图触发 OOM 兜底） */
     private boolean exportSingle(ImageData data, String text, boolean stroke,
                                  boolean numbering, int number) {
-        Bitmap fullBitmap = loadSampledBitmap(data.uri, 4096);
+        Bitmap fullBitmap = loadSampledBitmap(data.uri, Integer.MAX_VALUE);
         if (fullBitmap == null) return false;
 
         // 透明底图片必须导出 PNG（JPEG 不支持透明，会变黑底）
@@ -574,8 +574,9 @@ public class WatermarkToolActivity extends AppCompatActivity {
     // ==================== 图片加载 ====================
 
     /**
-     * 加载图片 Bitmap，降采样到指定宽度以内（M4：同时限制总像素防长图 OOM）。
-     * @param reqWidth 目标宽度
+     * 加载图片 Bitmap。传入 reqWidth=Integer.MAX_VALUE 表示不限制宽度，仅对超过 1 亿像素的
+     * 极端超大图做降采样兜底（防止 OOM）；普通照片按原图尺寸加载。
+     * @param reqWidth 目标宽度（超过即降采样；传 Integer.MAX_VALUE 表示不限制）
      */
     private Bitmap loadSampledBitmap(Uri uri, int reqWidth) {
         InputStream is = null;
@@ -589,11 +590,13 @@ public class WatermarkToolActivity extends AppCompatActivity {
             is.close();
             is = null;
 
-            // M4 修复：同时限制宽度和总像素数，防止长图（如 4096×8000）OOM
+            // 仅做极端尺寸兜底：总像素超过 1 亿（约 10000×10000）才降采样，避免个别超大图 OOM；
+            // 普通手机照片（≤ 约 8000×6000）均按原图尺寸加载，不做任何质量/尺寸限制。
+            // 注：reqWidth 传 Integer.MAX_VALUE 即表示不限制宽度。
             int sampleSize = 1;
             long totalPixels = (long) opts.outWidth * opts.outHeight;
             while (opts.outWidth / sampleSize > reqWidth
-                    || totalPixels / (sampleSize * sampleSize) > 24_000_000) {
+                    || totalPixels / (sampleSize * sampleSize) > 100_000_000L) {
                 sampleSize *= 2;
             }
             opts.inJustDecodeBounds = false;

@@ -3,11 +3,13 @@ package com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -91,7 +93,7 @@ public class TiemoUtils {
         return deleteRecursively(dir);
     }
 
-    private static boolean deleteRecursively(File f) {
+    public static boolean deleteRecursively(File f) {
         if (f == null) return false;
         if (f.isDirectory()) {
             File[] children = f.listFiles();
@@ -195,6 +197,64 @@ public class TiemoUtils {
         File dir = new File(ctx.getCacheDir(), "tiemo_gen");
         if (!dir.exists()) dir.mkdirs();
         return dir;
+    }
+
+    // ==================== 预设（参数 + 图片打包，便于复用） ====================
+
+    /** 预设根目录：<外部存储>/Android/data/<pkg>/files/tiemo/presets */
+    public static File getPresetsRoot(Context ctx) {
+        File root = new File(ctx.getExternalFilesDir(null), "tiemo/presets");
+        if (!root.exists()) root.mkdirs();
+        return root;
+    }
+
+    /** 预设名 → 安全的目录 */
+    public static File getPresetDir(Context ctx, String name) {
+        return new File(getPresetsRoot(ctx), safeName(name));
+    }
+
+    /** 列出所有预设（含 preset.json 的目录名，按名称排序） */
+    public static List<String> listPresets(Context ctx) {
+        List<String> list = new ArrayList<>();
+        File root = getPresetsRoot(ctx);
+        File[] dirs = root.listFiles(f -> f.isDirectory() && new File(f, "preset.json").exists());
+        if (dirs == null) return list;
+        for (File d : dirs) list.add(d.getName());
+        list.sort(String::compareToIgnoreCase);
+        return list;
+    }
+
+    /** 从 Uri 取原始文件名（用于保留扩展名） */
+    public static String getUriDisplayName(Context ctx, Uri uri) {
+        String result = null;
+        try (Cursor c = ctx.getContentResolver().query(uri,
+                new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
+            if (c != null && c.moveToFirst()) {
+                int idx = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (idx >= 0) result = c.getString(idx);
+            }
+        } catch (Exception ignored) {}
+        return result;
+    }
+
+    /** 把 Uri 指向的图片字节拷贝到目录下的目标文件，返回目标文件（失败返回 null） */
+    public static File copyUriToFile(Context ctx, Uri uri, File dir, String fileName) {
+        if (uri == null) return null;
+        try {
+            if (!dir.exists()) dir.mkdirs();
+            File dst = new File(dir, fileName);
+            try (InputStream in = ctx.getContentResolver().openInputStream(uri);
+                 OutputStream out = new FileOutputStream(dst)) {
+                if (in == null) return null;
+                byte[] buf = new byte[8192];
+                int len;
+                while ((len = in.read(buf)) > 0) out.write(buf, 0, len);
+            }
+            return dst;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /** 解码缩略图（用于文件夹/结果展示），降采样到 maxSize 以内 */
