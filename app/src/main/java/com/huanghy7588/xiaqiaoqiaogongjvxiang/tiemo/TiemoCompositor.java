@@ -93,10 +93,10 @@ public class TiemoCompositor {
         p.setAlpha(Math.round(layer.opacity * 255f));
 
         if (layer.tiled) {
-            // 重复/平铺（类似爱笔思画重复功能）：
-            // 底图竖比或正方 -> 水印宽度 = 底图宽度，纵向重复铺满；
-            // 底图横比     -> 水印高度 = 底图高度，横向重复铺满。
-            // 未覆盖处一块块复制粘贴过去，密铺整图（保持水印自身比例）。
+            // 先按底图尺寸缩放，再紧贴平铺，绝不留缝（类似爱笔思画重复功能）：
+            // 底图竖比或正方 -> 水印宽度 = 底图宽度，纵向紧密重复铺满；
+            // 底图横比     -> 水印高度 = 底图高度，横向紧密重复铺满。
+            // 底图与水印比例一致 -> 直接缩放一张铺满整图，不重复、不错位。
             float s;
             if (H >= W) {
                 s = (float) W / ovW;          // 水印宽度对齐底图宽度
@@ -105,11 +105,21 @@ public class TiemoCompositor {
             }
             int tw = Math.max(1, Math.round(ovW * s));
             int th = Math.max(1, Math.round(ovH * s));
-            int cols = (int) Math.ceil((double) W / tw);
-            int rows = (int) Math.ceil((double) H / th);
-            for (int r = 0; r < rows; r++) {
-                for (int c = 0; c < cols; c++) {
-                    off.drawBitmap(overlay, c * tw, r * th, p);
+
+            float baseRatio = (float) W / H;
+            float ovRatio = (float) ovW / ovH;
+            if (Math.abs(baseRatio - ovRatio) < 0.03f) {
+                // 比例一致：缩放一张铺满整图（无缝隙、无重叠）
+                off.drawBitmap(overlay, null, new RectF(0, 0, W, H), p);
+            } else {
+                int cols = (int) Math.ceil((double) W / tw);
+                int rows = (int) Math.ceil((double) H / th);
+                RectF dst = new RectF();
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < cols; c++) {
+                        dst.set(c * tw, r * th, c * tw + tw, r * th + th);
+                        off.drawBitmap(overlay, null, dst, p);
+                    }
                 }
             }
         } else {

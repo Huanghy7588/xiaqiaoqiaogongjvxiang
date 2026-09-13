@@ -116,6 +116,7 @@
     <string name="tiemo_generate_all">生成全部</string>
     <string name="tiemo_save_all">保存全部</string>
     <string name="tiemo_save">保存</string>
+    <string name="tiemo_save_to_folder">保存到文件夹</string>
     <string name="tiemo_preview">预览效果</string>
     <string name="tiemo_need_base">请先导入图片</string>
     <string name="tiemo_need_watermark">水印为必选项，请先导入水印图片</string>

@@ -44,7 +44,7 @@
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_weight="1"
-                android:text="@string/tiemo_save" />
+                android:text="@string/tiemo_save_to_folder" />
         </LinearLayout>
 
         <!-- 图片（必选，可多张） -->
@@ -179,35 +179,27 @@
                 android:textSize="17sp"
                 android:textStyle="bold" />
 
-            <LinearLayout
+            <HorizontalScrollView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
+                android:scrollbars="none">
 
-                <HorizontalScrollView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:scrollbars="none">
-
-                    <LinearLayout
-                        android:id="@+id/layout_results"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal" />
-                </HorizontalScrollView>
-
-                <Button
-                    android:id="@+id/btn_save_all"
-                    style="@style/Widget.XiaQiaoQiao.Button.Primary"
+                <LinearLayout
+                    android:id="@+id/layout_results"
                     android:layout_width="wrap_content"
-                    android:layout_height="52dp"
-                    android:layout_marginStart="10dp"
-                    android:text="@string/tiemo_save_all"
-                    android:visibility="gone" />
-            </LinearLayout>
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
+            <Button
+                android:id="@+id/btn_save_all"
+                style="@style/Widget.XiaQiaoQiao.Button.Primary"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:layout_marginTop="12dp"
+                android:text="@string/tiemo_save_all"
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/tv_result_hint"

@@ -1,14 +1,14 @@
 {
   "announcement": {
-    "title": "夏乔乔工具箱公告",
+    "title": "",
     "content": "",
     "enabled": false
   },
   "update": {
-    "versionCode": 34,
-    "versionName": "1.3.2",
-    "updateLog": "1. 二维码结果页样式统一：方形/圆点按钮改为同一按钮样式（选中绿、未选灰）\n2. 前景色/背景色色块改为可横向滑动，不再截断（含粉色背景色也可滑到）\n3. 图片转二维码与文字转二维码共用同一美化页，体验一致",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.2/app-release.apk",
+    "versionCode": 35,
+    "versionName": "1.3.3",
+    "updateLog": "贴膜水印机：修复水印平铺留白（先缩放再紧贴铺满、比例一致直接铺满）、修复文件夹无法打开、保存按钮改为保存到文件夹、保存全部移到单独一行",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.3/app-release.apk",
     "forceUpdate": false
   }
 }

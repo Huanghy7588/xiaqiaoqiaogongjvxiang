@@ -4,8 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_card_rounded"
-    android:clickable="true"
-    android:focusable="true"
     android:gravity="center_horizontal"
     android:orientation="vertical"
     android:padding="10dp">
