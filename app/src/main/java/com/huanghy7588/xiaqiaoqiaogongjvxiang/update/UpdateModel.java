@@ -68,7 +68,14 @@ public class UpdateModel {
             JSONObject root = new JSONObject(json);
             UpdateModel model = new UpdateModel();
             model.announcement = Announcement.parse(root.optJSONObject("announcement"));
-            model.update = UpdateInfo.parse(root.optJSONObject("update"));
+            JSONObject upd = root.optJSONObject("update");
+            if (upd != null) {
+                // 标准包裹结构：{"update": {...}, "announcement": {...}}
+                model.update = UpdateInfo.parse(upd);
+            } else {
+                // 兼容平铺结构：字段直接放在根层级（防止 JSON 写错导致静默收不到更新）
+                model.update = UpdateInfo.parse(root);
+            }
             return model;
         } catch (Exception e) {
             e.printStackTrace();
