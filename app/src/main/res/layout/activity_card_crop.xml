@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 头像裁剪：全屏黑色，中间圆形裁剪框，拖动/缩放选择头像区域 -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <com.huanghy7588.xiaqiaoqiaogongjvxiang.cardgen.CropView
+        android:id="@+id/crop_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:gravity="center"
+        android:padding="16dp"
+        android:text="@string/cardgen_crop_hint"
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
+
+    <Button
+        android:id="@+id/btn_crop_confirm"
+        style="@style/Widget.XiaQiaoQiao.Button.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_margin="16dp"
+        android:backgroundTint="@color/brand_blue"
+        android:textColor="@android:color/white"
+        android:text="@string/cardgen_crop_confirm" />
+</FrameLayout>

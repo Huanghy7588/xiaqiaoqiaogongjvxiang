@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.cardgen.CardGeneratorActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.qr.QrToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoFolderActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
@@ -53,6 +54,13 @@ public class HomeFragment extends Fragment {
         View qrCard = root.findViewById(R.id.card_qr);
         qrCard.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), QrToolActivity.class);
+            startActivity(intent);
+        });
+
+        // 点击卡片生成器卡片
+        View cardgenCard = root.findViewById(R.id.card_cardgen);
+        cardgenCard.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), CardGeneratorActivity.class);
             startActivity(intent);
         });
 

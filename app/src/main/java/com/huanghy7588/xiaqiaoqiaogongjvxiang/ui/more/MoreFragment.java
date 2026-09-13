@@ -90,12 +90,17 @@ public class MoreFragment extends Fragment {
             UpdateChecker.checkManual(getActivity());
         });
 
-        // QQ 号长按复制
+        // QQ 号长按复制（保留）
         TextView tvQq = root.findViewById(R.id.tv_qq_number);
         tvQq.setOnLongClickListener(v -> {
             copyToClipboard(requireContext(), QQ_NUMBER);
             Toast.makeText(requireContext(), R.string.more_qq_copied, Toast.LENGTH_SHORT).show();
             return true;
+        });
+        // QQ 号点按也可直接复制
+        tvQq.setOnClickListener(v -> {
+            copyToClipboard(requireContext(), QQ_NUMBER);
+            Toast.makeText(requireContext(), R.string.more_qq_copied, Toast.LENGTH_SHORT).show();
         });
 
         // 打赏按钮：弹窗显示赞赏码

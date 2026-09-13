@@ -70,7 +70,7 @@
     <!-- 投稿与打赏 -->
     <string name="more_contact_label">投稿功能/优化功能：</string>
     <string name="more_qq_number">QQ3089096785</string>
-    <string name="more_qq_hint">长按QQ号可以直接复制哦</string>
+    <string name="more_qq_hint">点按也能直接复制哦</string>
     <string name="more_toolbox_free">夏乔乔工具箱为公开免费软件</string>
     <string name="more_purchase_contact">购买字帖小助手软件，请联系夏乔乔 3089096785</string>
     <string name="more_purchase_ks">夏乔乔 快手：qaq3089095785</string>
@@ -173,4 +173,23 @@
     <string name="qr_saved">已保存到相册</string>
     <string name="qr_save_fail">保存失败，请稍后重试</string>
     <string name="qr_copied">已复制</string>
+
+    <!-- 卡片生成器 -->
+    <string name="tool_cardgen">卡片生成器</string>
+    <string name="tool_cardgen_desc">生成留言卡片，一键导出到相册</string>
+    <string name="cardgen_title">卡片生成器</string>
+    <string name="cardgen_choose_avatar">选择头像：</string>
+    <string name="cardgen_pick_image">选择相册图片</string>
+    <string name="cardgen_name_hint">夏乔乔</string>
+    <string name="cardgen_message_hint">喜欢伊芙琳</string>
+    <string name="cardgen_source_hint">来自夏乔乔的留言</string>
+    <string name="cardgen_time_hint">13：14</string>
+    <string name="cardgen_likes_hint">520</string>
+    <string name="cardgen_export">导出卡片</string>
+    <string name="cardgen_saved">卡片已保存到相册</string>
+    <string name="cardgen_save_fail">保存失败，请稍后重试</string>
+    <string name="cardgen_no_avatar">请先选择头像</string>
+    <string name="cardgen_crop_title">裁剪头像</string>
+    <string name="cardgen_crop_confirm">确定</string>
+    <string name="cardgen_crop_hint">拖动并缩放图片，选择要作为头像的部分</string>
 </resources>
