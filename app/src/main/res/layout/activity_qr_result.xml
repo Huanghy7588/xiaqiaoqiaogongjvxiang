@@ -70,12 +70,18 @@
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
 
-                <LinearLayout
-                    android:id="@+id/ll_fg"
+                <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal" />
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/ll_fg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -85,12 +91,18 @@
                     android:textColor="@color/text_primary"
                     android:textSize="14sp" />
 
-                <LinearLayout
-                    android:id="@+id/ll_bg"
+                <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal" />
+                    android:scrollbars="none">
+
+                    <LinearLayout
+                        android:id="@+id/ll_bg"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal" />
+                </HorizontalScrollView>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -117,7 +129,7 @@
 
                     <Button
                         android:id="@+id/btn_dot_round"
-                        style="@style/Widget.XiaQiaoQiao.Button.DangerOutline"
+                        style="@style/Widget.XiaQiaoQiao.Button.Primary"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
