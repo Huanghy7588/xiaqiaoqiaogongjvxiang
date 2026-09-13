@@ -158,7 +158,7 @@
     <string name="qr_dot_square">方形</string>
     <string name="qr_dot_round">圆点</string>
     <string name="qr_empty_text">请输入文字</string>
-    <string name="qr_decode_fail">未识别到二维码，请换一张更清晰的图片</string>
+    <string name="qr_decode_fail">未识别到二维码。请确认：图片完整未被裁剪、二维码正向清晰、为微信/支付宝/QQ等标准收款码（彩色码已支持）</string>
     <string name="qr_decode_ing">正在识别二维码…</string>
     <string name="qr_encode_fail">生成失败，内容可能过长</string>
     <string name="qr_saved">已保存到相册</string>

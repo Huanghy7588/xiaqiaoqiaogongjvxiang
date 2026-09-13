@@ -83,8 +83,8 @@ public class QrImageActivity extends AppCompatActivity {
         pd.setCancelable(false);
         pd.show();
         new Thread(() -> {
-            Bitmap bmp = TiemoUtils.decodeUri(QrImageActivity.this, uri, 1000);
-            final String text = QrUtils.decodeBitmap(bmp);
+            Bitmap bmp = TiemoUtils.decodeUri(QrImageActivity.this, uri, 2000);
+            final String text = (bmp != null) ? QrUtils.decodeBitmap(bmp) : null;
             if (bmp != null && !bmp.isRecycled()) bmp.recycle();
             ui.post(() -> {
                 if (pd.isShowing()) pd.dismiss();
