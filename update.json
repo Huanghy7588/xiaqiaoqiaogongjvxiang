@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 37,
-    "versionName": "1.3.5",
-    "updateLog": "① 更多页：QQ号支持点按直接复制（长按复制保留）；② 新增「卡片生成器」：输入头像/名字/留言/来源/时间/点赞数，实时预览留言卡片，可裁剪头像区域，一键将整张卡片导出为图片保存到相册",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.5/app-release.apk",
+    "versionCode": 38,
+    "versionName": "1.3.6",
+    "updateLog": "① 卡片生成器优化：输入框增加提示语（示例内容作占位），预览默认显示「请输入」占位；② 预览底部来源/时间/点赞数灰色字调淡",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.6/app-release.apk",
     "forceUpdate": false
   }
 }

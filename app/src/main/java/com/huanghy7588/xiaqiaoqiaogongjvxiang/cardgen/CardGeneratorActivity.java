@@ -111,18 +111,19 @@ public class CardGeneratorActivity extends AppCompatActivity {
         EditText etTime = findViewById(R.id.et_time);
         EditText etLikes = findViewById(R.id.et_likes);
 
-        etName.addTextChangedListener(new SimpleWatcher(s -> tvName.setText(s)));
-        etMessage.addTextChangedListener(new SimpleWatcher(s -> tvMessage.setText(s)));
-        etSource.addTextChangedListener(new SimpleWatcher(s -> tvSource.setText(s)));
-        etTime.addTextChangedListener(new SimpleWatcher(s -> tvTime.setText(s)));
-        etLikes.addTextChangedListener(new SimpleWatcher(s -> tvLikes.setText(s)));
+        final String ph = getString(R.string.cardgen_placeholder);
+        etName.addTextChangedListener(new SimpleWatcher(s -> tvName.setText(s.isEmpty() ? ph : s)));
+        etMessage.addTextChangedListener(new SimpleWatcher(s -> tvMessage.setText(s.isEmpty() ? ph : s)));
+        etSource.addTextChangedListener(new SimpleWatcher(s -> tvSource.setText(s.isEmpty() ? ph : s)));
+        etTime.addTextChangedListener(new SimpleWatcher(s -> tvTime.setText(s.isEmpty() ? ph : s)));
+        etLikes.addTextChangedListener(new SimpleWatcher(s -> tvLikes.setText(s.isEmpty() ? ph : s)));
 
-        // 预览先用 hint 占位
-        tvName.setText(etName.getHint());
-        tvMessage.setText(etMessage.getHint());
-        tvSource.setText(etSource.getHint());
-        tvTime.setText(etTime.getHint());
-        tvLikes.setText(etLikes.getHint());
+        // 预览初始为「请输入」占位
+        tvName.setText(ph);
+        tvMessage.setText(ph);
+        tvSource.setText(ph);
+        tvTime.setText(ph);
+        tvLikes.setText(ph);
 
         // 导出
         Button btnExport = findViewById(R.id.btn_export);
