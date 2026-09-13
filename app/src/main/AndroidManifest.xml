@@ -71,6 +71,34 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XiaQiaoQiao" />
 
+        <!-- 二维码工具：入口 -->
+        <activity
+            android:name=".qr.QrToolActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
+        <!-- 二维码工具：图片转二维码 -->
+        <activity
+            android:name=".qr.QrImageActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
+        <!-- 二维码工具：文字转二维码 -->
+        <activity
+            android:name=".qr.QrTextActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
+        <!-- 二维码工具：结果与美化 -->
+        <activity
+            android:name=".qr.QrResultActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+
         <!-- 大图预览：全屏黑底 -->
         <activity
             android:name=".watermark.PreviewActivity"

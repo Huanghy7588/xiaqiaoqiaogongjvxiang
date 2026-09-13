@@ -132,4 +132,36 @@
     <string name="tiemo_save_title">保存到文件夹</string>
     <string name="tiemo_save_pick_hint">选择已有文件夹，或输入新名称后保存</string>
     <string name="tiemo_export_fail">保存失败，请稍后重试</string>
+
+    <!-- 二维码工具 -->
+    <string name="tool_qr">二维码工具</string>
+    <string name="tool_qr_desc">生成与解析二维码，支持颜色与圆点样式美化</string>
+    <string name="qr_tool_title">二维码工具</string>
+    <string name="qr_tool_intro">选择一种方式生成二维码：</string>
+    <string name="qr_image_title">图片转二维码</string>
+    <string name="qr_image_subtitle">导入收款码图片，解析后重新生成二维码</string>
+    <string name="qr_text_title">文字转二维码</string>
+    <string name="qr_text_subtitle">输入文字，生成普通二维码</string>
+    <string name="qr_pick_image">选择收款码图片</string>
+    <string name="qr_pick_hint">支持微信 / 支付宝 / QQ 收款码或其它二维码图片</string>
+    <string name="qr_decoded_label">解析结果（可编辑）</string>
+    <string name="qr_decoded_hint">解析成功后内容会显示在这里，可复制或修改后再生成</string>
+    <string name="qr_copy">复制</string>
+    <string name="qr_generate">生成二维码</string>
+    <string name="qr_input_hint">请输入要生成二维码的文字</string>
+    <string name="qr_save">保存到相册</string>
+    <string name="qr_preview">二维码预览</string>
+    <string name="qr_beautify">美化</string>
+    <string name="qr_fg_color">前景色</string>
+    <string name="qr_bg_color">背景色</string>
+    <string name="qr_dot_style">码点样式</string>
+    <string name="qr_dot_square">方形</string>
+    <string name="qr_dot_round">圆点</string>
+    <string name="qr_empty_text">请输入文字</string>
+    <string name="qr_decode_fail">未识别到二维码，请换一张更清晰的图片</string>
+    <string name="qr_decode_ing">正在识别二维码…</string>
+    <string name="qr_encode_fail">生成失败，内容可能过长</string>
+    <string name="qr_saved">已保存到相册</string>
+    <string name="qr_save_fail">保存失败，请稍后重试</string>
+    <string name="qr_copied">已复制</string>
 </resources>

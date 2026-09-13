@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 30,
-    "versionName": "1.2.8",
-    "updateLog": "v1.2.8 贴膜水印机水印平铺逻辑修正：\n1. 水印/底纹改为真正的「重复/平铺」（与爱笔思画重复功能一致）：底图竖比或正方时水印宽度=底图宽度、纵向重复铺满；底图横比时水印高度=底图高度、横向重复铺满，未覆盖处一块块复制粘贴铺满全图\n2. 修复此前把水印拉大只放一两块的怪异显示",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.8/app-release.apk",
+    "versionCode": 31,
+    "versionName": "1.2.9",
+    "updateLog": "v1.2.9 新增「二维码工具」：\n1. 首页新增「二维码工具」入口（图片转二维码 / 文字转二维码 两个大按钮）\n2. 图片转二维码：导入微信/支付宝/QQ 等收款码图片，自动解析内容并可复制或修改，再一键重新生成二维码\n3. 文字转二维码：输入任意文字直接生成二维码\n4. 美化：可自定义前景色、背景色（含透明）、方形/圆点样式，并保留三个定位角，保证可扫描\n5. 一键保存到相册",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.2.9/app-release.apk",
     "forceUpdate": false
   }
 }

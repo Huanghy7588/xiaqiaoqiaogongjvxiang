@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.qr.QrToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoFolderActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.WuzhongTableActivity;
@@ -45,6 +46,13 @@ public class HomeFragment extends Fragment {
         View tiemoCard = root.findViewById(R.id.card_tiemo);
         tiemoCard.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), TiemoFolderActivity.class);
+            startActivity(intent);
+        });
+
+        // 点击二维码工具卡片
+        View qrCard = root.findViewById(R.id.card_qr);
+        qrCard.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), QrToolActivity.class);
             startActivity(intent);
         });
 
