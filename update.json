@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 41,
-    "versionName": "1.3.9",
-    "updateLog": "卡片生成器输入框提示语改为字段名（姓名/留言/来源/时间/点赞数），预览空状态保持「请输入」占位",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.9/app-release.apk",
+    "versionCode": 42,
+    "versionName": "1.4.0",
+    "updateLog": "更多页QQ号复制提示文案更新为「点按/长按可以直接复制QQ」",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.0/app-release.apk",
     "forceUpdate": false
   }
 }

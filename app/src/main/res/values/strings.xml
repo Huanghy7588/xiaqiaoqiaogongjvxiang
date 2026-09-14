@@ -70,7 +70,7 @@
     <!-- 投稿与打赏 -->
     <string name="more_contact_label">投稿功能/优化功能：</string>
     <string name="more_qq_number">QQ3089096785</string>
-    <string name="more_qq_hint">点按也能直接复制哦</string>
+    <string name="more_qq_hint">点按/长按可以直接复制QQ</string>
     <string name="more_toolbox_free">夏乔乔工具箱为公开免费软件</string>
     <string name="more_purchase_contact">购买字帖小助手软件，请联系夏乔乔 3089096785</string>
     <string name="more_purchase_ks">夏乔乔 快手：qaq3089095785</string>
