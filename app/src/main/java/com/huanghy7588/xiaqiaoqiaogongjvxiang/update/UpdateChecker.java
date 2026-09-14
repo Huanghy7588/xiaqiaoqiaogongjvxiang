@@ -169,23 +169,31 @@ public class UpdateChecker {
     }
 
     /**
-     * 依次尝试主地址（@latest）、备用地址（@main）、最终兜底（raw.githubusercontent）。
-     * 每个源最多重试 2 次；任一拿到合法 JSON 即返回；全部失败返回 null。
-     * 注意：jsDelivr 会忽略 query string，所以不靠时间戳绕缓存，而是靠 @latest 的 tag 即时解析。
+     * 依次请求主地址（@latest）、备用地址（@main）、最终兜底（raw.githubusercontent）。
+     * 每个源最多重试 2 次；收集所有源中合法且带更新信息的 model，
+     * 最终返回 versionCode 最高的那个（U12 修复）。
+     * 原因：jsDelivr 的 @latest/@main 是动态引用，会被长期缓存、且不随新 Release 自动刷新，
+     * 单一源成功返回旧值就直接返回会导致"检查更新收不到新包"；改为多源取最高版本后，
+     * 只要 raw.githubusercontent 兜底源（无缓存、始终最新）可达，就能正确收到更新。
      */
     private static UpdateModel fetchModelWithFallback() {
         String[] sources = {JSON_BASE_URL, JSON_FALLBACK_URL, JSON_RAW_URL};
+        UpdateModel best = null;
         for (String src : sources) {
             for (int attempt = 0; attempt < 2; attempt++) {
                 try {
                     UpdateModel model = UpdateModel.parse(fetchJson(src));
-                    if (model != null) return model;
+                    if (model != null && model.update != null) {
+                        if (best == null || model.update.versionCode > best.update.versionCode) {
+                            best = model;
+                        }
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
-        return null;
+        return best;
     }
 
     /** 先弹公告，关闭后再检测更新 */

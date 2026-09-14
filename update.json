@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 39,
-    "versionName": "1.3.7",
-    "updateLog": "① 卡片生成器优化：输入框增加提示语（示例内容作占位），预览默认显示「请输入」占位；② 预览底部来源/时间/点赞数灰色字调淡",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.7/app-release.apk",
+    "versionCode": 40,
+    "versionName": "1.3.8",
+    "updateLog": "① 卡片生成器优化：输入框增加提示语（示例内容作占位），预览默认显示「请输入」占位；② 预览底部来源/时间/点赞数灰色字调淡；③ 修复应用内「检查更新」在 CDN 缓存期间收不到新版本的问题（改为多源取最高版本，raw 兜底源始终最新）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.3.8/app-release.apk",
     "forceUpdate": false
   }
 }
