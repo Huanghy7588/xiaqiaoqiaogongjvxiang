@@ -180,11 +180,11 @@
     <string name="cardgen_title">卡片生成器</string>
     <string name="cardgen_choose_avatar">选择头像：</string>
     <string name="cardgen_pick_image">选择相册图片</string>
-    <string name="cardgen_name_hint">夏乔乔</string>
-    <string name="cardgen_message_hint">喜欢伊芙琳</string>
-    <string name="cardgen_source_hint">来自夏乔乔的留言</string>
-    <string name="cardgen_time_hint">13：14</string>
-    <string name="cardgen_likes_hint">520</string>
+    <string name="cardgen_name_hint">姓名</string>
+    <string name="cardgen_message_hint">留言</string>
+    <string name="cardgen_source_hint">来源</string>
+    <string name="cardgen_time_hint">时间</string>
+    <string name="cardgen_likes_hint">点赞数</string>
     <string name="cardgen_placeholder">请输入</string>
     <string name="cardgen_export">导出卡片</string>
     <string name="cardgen_saved">卡片已保存到相册</string>
