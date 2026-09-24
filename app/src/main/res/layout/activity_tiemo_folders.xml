@@ -36,14 +36,4 @@
             android:textSize="15sp" />
     </LinearLayout>
 
-    <!-- 右下角加号 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="20dp"
-        android:contentDescription="@string/tiemo_new_folder"
-        android:src="@android:drawable/ic_input_add"
-        android:tint="@android:color/white" />
 </FrameLayout>

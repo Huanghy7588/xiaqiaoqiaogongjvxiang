@@ -49,10 +49,6 @@ public class TiemoFolderActivity extends AppCompatActivity {
         gridFolders = findViewById(R.id.grid_folders);
         tvEmpty = findViewById(R.id.tv_folder_empty);
 
-        // 右下角 + 进入编辑主页
-        findViewById(R.id.fab_add).setOnClickListener(v ->
-                startActivity(new Intent(this, TiemoEditorActivity.class)));
-
         gridFolders.setOnItemClickListener((parent, view, position, id) -> {
             TiemoUtils.FolderInfo info = folders.get(position);
             Intent intent = new Intent(this, TiemoGalleryActivity.class);

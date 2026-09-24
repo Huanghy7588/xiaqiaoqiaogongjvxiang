@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 42,
-    "versionName": "1.4.0",
-    "updateLog": "更多页QQ号复制提示文案更新为「点按/长按可以直接复制QQ」",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.0/app-release.apk",
+    "versionCode": 43,
+    "versionName": "1.4.1",
+    "updateLog": "贴膜水印机改为点击直接进入图片水印底纹操作页；移除文件夹页新建按钮；操作页「保存到文件夹」按钮文案改为「保存预设」，保留「打开预设」",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.1/app-release.apk",
     "forceUpdate": false
   }
 }

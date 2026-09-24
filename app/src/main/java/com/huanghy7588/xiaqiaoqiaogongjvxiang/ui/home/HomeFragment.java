@@ -13,7 +13,7 @@ import androidx.fragment.app.Fragment;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.cardgen.CardGeneratorActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.qr.QrToolActivity;
-import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoFolderActivity;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoEditorActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.WuzhongTableActivity;
 
@@ -43,10 +43,10 @@ public class HomeFragment extends Fragment {
             startActivity(intent);
         });
 
-        // 点击贴膜水印机卡片
+        // 点击贴膜水印机卡片，直接进入图片水印底纹操作页（跳过文件夹列表页）
         View tiemoCard = root.findViewById(R.id.card_tiemo);
         tiemoCard.setOnClickListener(v -> {
-            Intent intent = new Intent(getContext(), TiemoFolderActivity.class);
+            Intent intent = new Intent(getContext(), TiemoEditorActivity.class);
             startActivity(intent);
         });
 
