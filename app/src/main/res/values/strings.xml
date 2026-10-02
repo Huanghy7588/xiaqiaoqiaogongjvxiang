@@ -194,6 +194,13 @@
     <string name="pintu_count_8">8</string>
     <string name="pintu_count_9">9</string>
     <string name="pintu_count_12">12</string>
+    <string name="pintu_count_15">15</string>
+    <string name="pintu_orient_h">横排 5×3</string>
+    <string name="pintu_orient_v">竖排 3×5</string>
+    <string name="pintu_preview_single">第 %1$d 张（共 %2$d 张导入）</string>
+    <string name="pintu_decode_fail">这张图片读取失败，换一张试试</string>
+    <string name="pintu_some_failed">有 %1$d 张图片读不出来（格式可能不支持），那一格保持透明</string>
+    <string name="pintu_unreadable">有 %1$d 张图片读不出来（格式不支持），已跳过</string>
     <string name="pintu_layout_hint">布局 %1$d 列 × %2$d 行（每格 %3$d 张，共输出 %4$d 张大图）</string>
     <string name="pintu_canvas_title">画布宽度（高度自适应）</string>
     <string name="pintu_width_hint">宽度</string>

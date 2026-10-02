@@ -113,61 +113,98 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_count_4"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="0dp"
+                    <!-- 第一行：4 / 6 / 8 / 9 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:minHeight="44dp"
-                        android:textSize="15sp"
-                        android:text="@string/pintu_count_4" />
+                        android:orientation="horizontal">
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_count_6"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:minHeight="44dp"
-                        android:textSize="15sp"
-                        android:text="@string/pintu_count_6" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_4"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_4" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_count_8"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:minHeight="44dp"
-                        android:textSize="15sp"
-                        android:text="@string/pintu_count_8" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_6"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_6" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_count_9"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:minHeight="44dp"
-                        android:textSize="15sp"
-                        android:text="@string/pintu_count_9" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_8"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_8" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_count_12"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="0dp"
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_9"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_9" />
+                    </LinearLayout>
+
+                    <!-- 第二行：12 / 15 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:layout_weight="1"
-                        android:minHeight="44dp"
-                        android:textSize="15sp"
-                        android:text="@string/pintu_count_12" />
+                        android:layout_marginTop="6dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_12"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_12" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_count_15"
+                            style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_weight="1"
+                            android:minHeight="44dp"
+                            android:textSize="15sp"
+                            android:text="@string/pintu_count_15" />
+                    </LinearLayout>
+
+                    <!-- 15 张时的横竖排切换 -->
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_orient"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:minHeight="36dp"
+                        android:textSize="13sp"
+                        android:text="@string/pintu_orient_v"
+                        android:visibility="gone" />
                 </LinearLayout>
 
                 <TextView

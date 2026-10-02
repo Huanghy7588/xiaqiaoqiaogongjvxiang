@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 44,
-    "versionName": "1.4.2",
-    "updateLog": "新增一键拼图：导入图片后自选 4/6/8/9/12 张拼图格式，画布宽度可自定义、高度自适应；图片多于格式张数时自动分组输出多张，不足则为透明底；支持透明底导出与全屏大图预览",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.2/app-release.apk",
+    "versionCode": 45,
+    "versionName": "1.4.3",
+    "updateLog": "一键拼图新增 15 张格式（横排 5×3 / 竖排 3×5 可切换）；修复部分机型导入图片后拼图全空白的问题（改用系统解码器，兼容 HEIC/HEIF 等格式）；导入图片支持点击查看大图；拼图结果保持透明底导出",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.3/app-release.apk",
     "forceUpdate": false
   }
 }
