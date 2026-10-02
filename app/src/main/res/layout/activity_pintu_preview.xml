@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 一键拼图：拼图大图预览（双指缩放、左右切换） -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <com.huanghy7588.xiaqiaoqiaogongjvxiang.wuzhong.ZoomImageView
+        android:id="@+id/pintu_preview_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/btn_pintu_close"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:backgroundTint="#66000000"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:padding="0dp"
+        android:text="✕"
+        android:textColor="@color/white"
+        android:textSize="18sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_pintu_prev"
+            android:layout_width="56dp"
+            android:layout_height="80dp"
+            android:layout_marginEnd="12dp"
+            android:backgroundTint="#66000000"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="←"
+            android:textColor="@color/white"
+            android:textSize="26sp" />
+
+        <TextView
+            android:id="@+id/tv_pintu_index"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#66000000"
+            android:paddingStart="14dp"
+            android:paddingTop="4dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="4dp"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <Button
+            android:id="@+id/btn_pintu_next"
+            android:layout_width="56dp"
+            android:layout_height="80dp"
+            android:layout_marginStart="12dp"
+            android:backgroundTint="#66000000"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            android:padding="0dp"
+            android:text="→"
+            android:textColor="@color/white"
+            android:textSize="26sp" />
+    </LinearLayout>
+</FrameLayout>

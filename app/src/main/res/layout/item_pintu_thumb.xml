@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 一键拼图：已导入图片缩略图（横滑列表） -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:layout_marginEnd="8dp">
+
+    <ImageView
+        android:id="@+id/iv_thumb"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_pintu_checker"
+        android:contentDescription="@string/pintu_thumb"
+        android:padding="1dp"
+        android:scaleType="centerCrop" />
+
+    <!-- 序号 -->
+    <TextView
+        android:id="@+id/tv_index"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="2dp"
+        android:layout_marginTop="16dp"
+        android:background="#AA000000"
+        android:paddingStart="6dp"
+        android:paddingTop="1dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="1dp"
+        android:textColor="@android:color/white"
+        android:textSize="11sp" />
+
+    <!-- 删除 -->
+    <ImageButton
+        android:id="@+id/btn_remove"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_remove_circle"
+        android:contentDescription="@string/pintu_remove"
+        android:padding="3dp"
+        android:src="@drawable/ic_back" />
+</FrameLayout>

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 透明区域棋盘格底：让透明 PNG 的透明部分在预览里看得见 -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:src="@drawable/bg_checker_tile"
+    android:tileMode="repeat" />

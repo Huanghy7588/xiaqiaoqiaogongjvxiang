@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 一键拼图：导入图片（顶部横滑）→ 选格式/画布 → 生成结果预览 → 保存 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_page"
+    android:orientation="vertical">
+
+    <include layout="@layout/include_top_bar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 导入图片（页面最上方） -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_card_rounded"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/pintu_import_title"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tv_count"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/pintu_count_zero"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_import"
+                        style="@style/Widget.XiaQiaoQiao.Button.Primary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="14sp"
+                        android:text="@string/pintu_import" />
+
+                    <Button
+                        android:id="@+id/btn_clear"
+                        style="@style/Widget.XiaQiaoQiao.Button.DangerOutline"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="14sp"
+                        android:text="@string/pintu_clear" />
+                </LinearLayout>
+
+                <!-- 已导入图片：左右滑动查看全部 -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rv_thumbs"
+                    android:layout_width="match_parent"
+                    android:layout_height="92dp"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal"
+                    android:scrollbars="horizontal"
+                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            </LinearLayout>
+
+            <!-- 拼图格式 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card_rounded"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pintu_format_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_count_4"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="15sp"
+                        android:text="@string/pintu_count_4" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_count_6"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="15sp"
+                        android:text="@string/pintu_count_6" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_count_8"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="15sp"
+                        android:text="@string/pintu_count_8" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_count_9"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="15sp"
+                        android:text="@string/pintu_count_9" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_count_12"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:minHeight="44dp"
+                        android:textSize="15sp"
+                        android:text="@string/pintu_count_12" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_layout_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- 画布大小 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card_rounded"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pintu_canvas_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <EditText
+                        android:id="@+id/et_width"
+                        android:layout_width="110dp"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_edittext"
+                        android:hint="@string/pintu_width_hint"
+                        android:inputType="number"
+                        android:maxLength="5"
+                        android:padding="10dp"
+                        android:text="1080"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:text="@string/pintu_unit_px"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="13sp" />
+
+                    <View
+                        android:layout_width="0dp"
+                        android:layout_height="1dp"
+                        android:layout_weight="1" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_width_720"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minHeight="36dp"
+                        android:textSize="13sp"
+                        android:text="@string/pintu_preset_720" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_width_1080"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minHeight="36dp"
+                        android:textSize="13sp"
+                        android:text="@string/pintu_preset_1080" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_width_1440"
+                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:minHeight="36dp"
+                        android:textSize="13sp"
+                        android:text="@string/pintu_preset_1440" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/tv_size_hint"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- 拼图结果预览区：点击任意一张可看大图 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_card_rounded"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/pintu_result_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tv_result_empty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/pintu_result_empty"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:id="@+id/layout_results"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <Button
+            android:id="@+id/btn_generate"
+            style="@style/Widget.XiaQiaoQiao.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/pintu_generate" />
+
+        <Button
+            android:id="@+id/btn_save"
+            style="@style/Widget.XiaQiaoQiao.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:text="@string/pintu_save" />
+    </LinearLayout>
+</LinearLayout>

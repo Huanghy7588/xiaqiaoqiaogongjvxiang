@@ -174,6 +174,49 @@
     <string name="qr_save_fail">保存失败，请稍后重试</string>
     <string name="qr_copied">已复制</string>
 
+    <!-- 一键拼图 -->
+    <string name="tool_pintu">一键拼图</string>
+    <string name="tool_pintu_desc">多张图片自动分组合成整图，支持透明底导出</string>
+    <string name="pintu_title">一键拼图</string>
+    <string name="pintu_import_title">导入图片</string>
+    <string name="pintu_import">添加图片</string>
+    <string name="pintu_clear">清空</string>
+    <string name="pintu_clear_msg">确定清除全部已导入的 %1$d 张图片吗？已生成的拼图也会一起清除。</string>
+    <string name="pintu_clear_ok">清除</string>
+    <string name="pintu_cancel">取消</string>
+    <string name="pintu_count">%1$d / %2$d 张</string>
+    <string name="pintu_count_zero">0 张</string>
+    <string name="pintu_thumb">已导入图片</string>
+    <string name="pintu_remove">移除这张</string>
+    <string name="pintu_format_title">拼图格式（每格张数）</string>
+    <string name="pintu_count_4">4</string>
+    <string name="pintu_count_6">6</string>
+    <string name="pintu_count_8">8</string>
+    <string name="pintu_count_9">9</string>
+    <string name="pintu_count_12">12</string>
+    <string name="pintu_layout_hint">布局 %1$d 列 × %2$d 行（每格 %3$d 张，共输出 %4$d 张大图）</string>
+    <string name="pintu_canvas_title">画布宽度（高度自适应）</string>
+    <string name="pintu_width_hint">宽度</string>
+    <string name="pintu_unit_px">px</string>
+    <string name="pintu_preset_720">720</string>
+    <string name="pintu_preset_1080">1080</string>
+    <string name="pintu_preset_1440">1440</string>
+    <string name="pintu_size_hint">宽 %1$d px，高 %2$d px（%3$d 行方形格子）</string>
+    <string name="pintu_result_title">拼图预览</string>
+    <string name="pintu_result_empty">还没有生成拼图，点下方「生成拼图」试试</string>
+    <string name="pintu_save_this">保存这张</string>
+    <string name="pintu_generate">生成拼图</string>
+    <string name="pintu_save">保存到相册</string>
+    <string name="pintu_generating">正在生成 %1$d/%2$d…</string>
+    <string name="pintu_generated">已生成 %1$d 张拼图</string>
+    <string name="pintu_generate_fail">生成失败，请重试</string>
+    <string name="pintu_saved">已保存到相册</string>
+    <string name="pintu_save_fail">保存失败，请稍后重试</string>
+    <string name="pintu_max_reached">已达导入上限</string>
+    <string name="pintu_no_image">请先导入图片</string>
+    <string name="pintu_no_result">请先生成拼图</string>
+    <string name="pintu_preview_index">第 %1$d / %2$d 张</string>
+
     <!-- 卡片生成器 -->
     <string name="tool_cardgen">卡片生成器</string>
     <string name="tool_cardgen_desc">生成留言卡片，一键导出到相册</string>
