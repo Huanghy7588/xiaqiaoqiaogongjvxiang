@@ -141,7 +141,6 @@
     <string name="tiemo_open_preset_title">打开预设</string>
     <string name="tiemo_no_preset">还没有保存的预设</string>
     <string name="tiemo_preset_loaded">已载入预设「%1$s」</string>
-    <string name="tiemo_preset_long_press_hint">点按直接打开，长按可删除</string>
     <string name="tiemo_preset_delete_title">删除预设</string>
     <string name="tiemo_preset_delete_msg">确定删除预设「%1$s」？里面的图片也会一起删掉</string>
     <string name="tiemo_preset_deleted">已删除预设「%1$s」</string>

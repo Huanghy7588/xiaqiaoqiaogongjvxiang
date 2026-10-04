@@ -720,7 +720,6 @@ public class TiemoEditorActivity extends AppCompatActivity {
         String[] items = presets.toArray(new String[0]);
         final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.tiemo_open_preset_title)
-                .setMessage(R.string.tiemo_preset_long_press_hint)
                 .setItems(items, (d, which) -> loadPreset(presets.get(which)))
                 .setNegativeButton(R.string.cancel, null)
                 .create();

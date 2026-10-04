@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 46,
-    "versionName": "1.4.4",
-    "updateLog": "贴膜水印机的「打开预设」支持长按删除预设（连同里面的图片一起删）；一键拼图画布宽度快捷键改为 3000 / 5000（仍可手填 200~5000）",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.4/app-release.apk",
+    "versionCode": 47,
+    "versionName": "1.4.5",
+    "updateLog": "修复「打开预设」弹窗里多出的一行提示文字（恢复原来样式），长按删除预设功能保留",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.5/app-release.apk",
     "forceUpdate": false
   }
 }
