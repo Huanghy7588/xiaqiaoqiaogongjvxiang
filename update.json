@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 45,
-    "versionName": "1.4.3",
-    "updateLog": "一键拼图新增 15 张格式（横排 5×3 / 竖排 3×5 可切换）；修复部分机型导入图片后拼图全空白的问题（改用系统解码器，兼容 HEIC/HEIF 等格式）；导入图片支持点击查看大图；拼图结果保持透明底导出",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.3/app-release.apk",
+    "versionCode": 46,
+    "versionName": "1.4.4",
+    "updateLog": "贴膜水印机的「打开预设」支持长按删除预设（连同里面的图片一起删）；一键拼图画布宽度快捷键改为 3000 / 5000（仍可手填 200~5000）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.4/app-release.apk",
     "forceUpdate": false
   }
 }

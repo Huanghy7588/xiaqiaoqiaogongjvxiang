@@ -172,9 +172,8 @@ public class PintuActivity extends AppCompatActivity {
         bindOrientation();
 
         // 画布宽度
-        bindWidthPreset(R.id.btn_width_720, 720);
-        bindWidthPreset(R.id.btn_width_1080, 1080);
-        bindWidthPreset(R.id.btn_width_1440, 1440);
+        bindWidthPreset(R.id.btn_width_3000, 3000);
+        bindWidthPreset(R.id.btn_width_5000, 5000);
         etWidth.setOnFocusChangeListener((v, hasFocus) -> { if (!hasFocus) updateSizeHint(); });
 
         // 生成 / 保存

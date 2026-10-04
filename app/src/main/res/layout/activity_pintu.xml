@@ -266,34 +266,24 @@
                         android:layout_weight="1" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_width_720"
+                        android:id="@+id/btn_width_3000"
                         style="@style/Widget.XiaQiaoQiao.Button.Chip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
                         android:minHeight="36dp"
                         android:textSize="13sp"
-                        android:text="@string/pintu_preset_720" />
+                        android:text="@string/pintu_preset_3000" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_width_1080"
+                        android:id="@+id/btn_width_5000"
                         style="@style/Widget.XiaQiaoQiao.Button.Chip"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
                         android:minHeight="36dp"
                         android:textSize="13sp"
-                        android:text="@string/pintu_preset_1080" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_width_1440"
-                        style="@style/Widget.XiaQiaoQiao.Button.Chip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="6dp"
-                        android:minHeight="36dp"
-                        android:textSize="13sp"
-                        android:text="@string/pintu_preset_1440" />
+                        android:text="@string/pintu_preset_5000" />
                 </LinearLayout>
 
                 <TextView

@@ -141,6 +141,10 @@
     <string name="tiemo_open_preset_title">打开预设</string>
     <string name="tiemo_no_preset">还没有保存的预设</string>
     <string name="tiemo_preset_loaded">已载入预设「%1$s」</string>
+    <string name="tiemo_preset_long_press_hint">点按直接打开，长按可删除</string>
+    <string name="tiemo_preset_delete_title">删除预设</string>
+    <string name="tiemo_preset_delete_msg">确定删除预设「%1$s」？里面的图片也会一起删掉</string>
+    <string name="tiemo_preset_deleted">已删除预设「%1$s」</string>
 
     <!-- 二维码工具 -->
     <string name="tool_qr">二维码工具</string>
@@ -205,9 +209,8 @@
     <string name="pintu_canvas_title">画布宽度（高度自适应）</string>
     <string name="pintu_width_hint">宽度</string>
     <string name="pintu_unit_px">px</string>
-    <string name="pintu_preset_720">720</string>
-    <string name="pintu_preset_1080">1080</string>
-    <string name="pintu_preset_1440">1440</string>
+    <string name="pintu_preset_3000">3000</string>
+    <string name="pintu_preset_5000">5000</string>
     <string name="pintu_size_hint">宽 %1$d px，高 %2$d px（%3$d 行方形格子）</string>
     <string name="pintu_result_title">拼图预览</string>
     <string name="pintu_result_empty">还没有生成拼图，点下方「生成拼图」试试</string>

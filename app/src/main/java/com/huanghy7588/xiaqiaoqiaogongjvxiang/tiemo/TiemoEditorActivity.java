@@ -718,11 +718,31 @@ public class TiemoEditorActivity extends AppCompatActivity {
             return;
         }
         String[] items = presets.toArray(new String[0]);
-        new AlertDialog.Builder(this)
+        final AlertDialog dialog = new AlertDialog.Builder(this)
                 .setTitle(R.string.tiemo_open_preset_title)
+                .setMessage(R.string.tiemo_preset_long_press_hint)
                 .setItems(items, (d, which) -> loadPreset(presets.get(which)))
                 .setNegativeButton(R.string.cancel, null)
-                .show();
+                .create();
+        // 长按 = 删除该预设（连同里面的图片一起删）
+        dialog.setOnShowListener(d -> dialog.getListView().setOnItemLongClickListener(
+                (parent, view, position, id) -> {
+                    String name = presets.get(position);
+                    new AlertDialog.Builder(this)
+                            .setTitle(R.string.tiemo_preset_delete_title)
+                            .setMessage(getString(R.string.tiemo_preset_delete_msg, name))
+                            .setPositiveButton(R.string.confirm, (a, b) -> {
+                                File dir = TiemoUtils.getPresetDir(this, name);
+                                boolean ok = TiemoUtils.deleteRecursively(dir);
+                                if (dialog.isShowing()) dialog.dismiss();
+                                Toast.makeText(this, ok ? getString(R.string.tiemo_preset_deleted, name)
+                                        : getString(R.string.tiemo_export_fail), Toast.LENGTH_SHORT).show();
+                            })
+                            .setNegativeButton(R.string.cancel, null)
+                            .show();
+                    return true;
+                }));
+        dialog.show();
     }
 
     /** 载入预设：恢复底图 + 各层参数与图片，并刷新 UI/预览 */
