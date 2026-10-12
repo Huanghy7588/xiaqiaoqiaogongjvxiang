@@ -160,7 +160,14 @@ public class BeadGenerator {
         b[idx] += k * eb;
     }
 
-    /** 限制总用色数：保留最高频的 maxColors 个，其余重映射到最近的已保留色。 */
+    /** 相近色合并阈值（CIEDE2000 ΔE）。小于该值的色号视为同一类，并入已保留的最近色，
+     *  用于削减脸部等平滑渐变区域的杂色，让成图更干净。 */
+    private static final double MERGE_DE_THRESHOLD = 12.0;
+
+    /** 限制并合并总用色数：
+     *  1) 相近色（ΔE < 阈值）直接并入最近的已保留色，平滑区域不再零碎；
+     *  2) 否则作为新色保留，直到达到 maxColors 上限；
+     *  3) 超上限的色并入全局最近的已保留色。 */
     private static void applyMaxColors(BeadColor[][] grid, int maxColors) {
         if (maxColors <= 0) return;
         Map<String, Integer> freq = new HashMap<>();
@@ -176,35 +183,54 @@ public class BeadGenerator {
 
         List<String> codes = new ArrayList<>(byCode.keySet());
         codes.sort((a, b) -> freq.get(b) - freq.get(a));
+
         List<BeadColor> kept = new ArrayList<>();
         Map<String, BeadColor> keptMap = new HashMap<>();
-        for (int i = 0; i < maxColors; i++) {
-            BeadColor k = byCode.get(codes.get(i));
-            kept.add(k);
-            keptMap.put(k.code, k);
+        for (String code : codes) {
+            BeadColor c = byCode.get(code);
+            // 1) 相近色并入已保留的最近色
+            BeadColor merged = null;
+            double bestD = MERGE_DE_THRESHOLD;
+            for (BeadColor k : kept) {
+                double d = Ciede2000.distance(c.lab[0], c.lab[1], c.lab[2],
+                        k.lab[0], k.lab[1], k.lab[2]);
+                if (d < bestD) {
+                    bestD = d;
+                    merged = k;
+                }
+            }
+            if (merged != null) {
+                keptMap.put(code, merged);
+                continue;
+            }
+            // 2) 作为新色保留（未达上限）
+            if (kept.size() < maxColors) {
+                kept.add(c);
+                keptMap.put(code, c);
+                continue;
+            }
+            // 3) 超上限：并入全局最近的已保留色
+            int bi = 0;
+            double bd = Double.MAX_VALUE;
+            for (int i = 0; i < kept.size(); i++) {
+                double d = Ciede2000.distance(c.lab[0], c.lab[1], c.lab[2],
+                        kept.get(i).lab[0], kept.get(i).lab[1], kept.get(i).lab[2]);
+                if (d < bd) {
+                    bd = d;
+                    bi = i;
+                }
+            }
+            keptMap.put(code, kept.get(bi));
         }
-        double[][] kl = new double[kept.size()][3];
-        for (int i = 0; i < kept.size(); i++) {
-            kl[i][0] = kept.get(i).lab[0];
-            kl[i][1] = kept.get(i).lab[1];
-            kl[i][2] = kept.get(i).lab[2];
-        }
+
         for (int y = 0; y < grid.length; y++) {
             for (int x = 0; x < grid[y].length; x++) {
                 BeadColor c = grid[y][x];
-                if (c == null || keptMap.containsKey(c.code)) continue;
-                double[] lab = c.lab;
-                int bi = 0;
-                double bd = Double.MAX_VALUE;
-                for (int i = 0; i < kept.size(); i++) {
-                    double d = Ciede2000.distance(lab[0], lab[1], lab[2],
-                            kl[i][0], kl[i][1], kl[i][2]);
-                    if (d < bd) {
-                        bd = d;
-                        bi = i;
-                    }
+                if (c == null) continue;
+                BeadColor mapped = keptMap.get(c.code);
+                if (mapped != null && mapped != c) {
+                    grid[y][x] = mapped;
                 }
-                grid[y][x] = kept.get(bi);
             }
         }
     }

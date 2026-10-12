@@ -33,7 +33,6 @@ public class BeadConfigActivity extends AppCompatActivity {
     private SeekBar seekWidth, seekMax;
     private Switch swDither, swBg;
     private int srcW, srcH;
-    private String expandedBrandId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +100,7 @@ public class BeadConfigActivity extends AppCompatActivity {
         swBg.setChecked(config.removeBackground);
 
         findViewById(R.id.row_brand).setOnClickListener(v -> showBrandDialog());
-        findViewById(R.id.row_color).setOnClickListener(v -> showBrandDialog());
+        findViewById(R.id.row_color).setOnClickListener(v -> showCountDialog());
 
         findViewById(R.id.btn_generate).setOnClickListener(v -> generate());
     }
@@ -177,40 +176,84 @@ public class BeadConfigActivity extends AppCompatActivity {
 
             final BeadBrands.Brand fb = b;
             row.setOnClickListener(v -> {
-                if (fb.options.size() == 1) {
-                    applyBrand(fb, fb.getDefault());
-                    d.dismiss();
-                } else {
-                    expandedBrandId = (expandedBrandId != null && expandedBrandId.equals(fb.id)) ? null : fb.id;
-                    showBrandDialog();
-                }
+                // 选品牌即应用该品牌的默认色数（颜色数量可在下一页单独再选）
+                applyBrand(fb, fb.getDefault());
+                d.dismiss();
             });
             root.addView(row);
+        }
 
-            if (expandedBrandId != null && expandedBrandId.equals(b.id)) {
-                for (BeadBrands.CountOption o : b.options) {
-                    final BeadBrands.CountOption fo = o;
-                    LinearLayout cRow = new LinearLayout(this);
-                    cRow.setOrientation(LinearLayout.HORIZONTAL);
-                    cRow.setGravity(Gravity.CENTER_VERTICAL);
-                    cRow.setPadding(dp(36), dp(10), 0, dp(10));
-                    TextView cDot = new TextView(this);
-                    cDot.setText(o.count == config.colorCount && b.id.equals(config.brandId) ? "●" : "○");
-                    cDot.setTextSize(14);
-                    cDot.setTextColor(0xFF4CAF50);
-                    cRow.addView(cDot);
-                    TextView cName = new TextView(this);
-                    cName.setText(o.count + " 色" + (o.recommended ? "（推荐）" : ""));
-                    cName.setTextSize(15);
-                    cName.setPadding(dp(12), 0, 0, 0);
-                    cRow.addView(cName);
-                    cRow.setOnClickListener(v -> {
-                        applyBrand(fb, fo);
-                        d.dismiss();
-                    });
-                    root.addView(cRow);
-                }
+        Button ok = new Button(this);
+        ok.setText(R.string.confirm);
+        ok.setBackgroundColor(0xFF4CAF50);
+        ok.setTextColor(0xFFFFFFFF);
+        ok.setPadding(0, dp(12), 0, dp(12));
+        ok.setOnClickListener(v -> d.dismiss());
+        root.addView(ok);
+
+        sv.addView(root);
+        d.setContentView(sv);
+        d.show();
+    }
+
+    /** 选择颜色数量（当前品牌支持的色数，例如 MARD 有 221 / 291）。 */
+    private void showCountDialog() {
+        if (brandDialog != null && brandDialog.isShowing()) {
+            brandDialog.dismiss();
+        }
+        final Dialog d = new Dialog(this);
+        brandDialog = d;
+        BeadBrands.Brand brand = BeadBrands.find(config.brandId);
+
+        ScrollView sv = new ScrollView(this);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        int pad = dp(20);
+        root.setPadding(pad, pad, pad, pad);
+
+        TextView title = new TextView(this);
+        title.setText(R.string.bead_pick_count);
+        title.setTextSize(18);
+        title.setTypeface(null, Typeface.BOLD);
+        title.setPadding(0, 0, 0, dp(8));
+        root.addView(title);
+
+        TextView sub = new TextView(this);
+        sub.setText(brand.name);
+        sub.setTextSize(13);
+        sub.setTextColor(0xFF757575);
+        sub.setPadding(0, 0, 0, dp(8));
+        root.addView(sub);
+
+        for (BeadBrands.CountOption o : brand.options) {
+            final boolean isCur = (o.count == config.colorCount && brand.id.equals(config.brandId));
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(0, dp(14), 0, dp(14));
+            if (isCur) {
+                row.setBackgroundColor(0x114CAF50);
             }
+            TextView dot = new TextView(this);
+            dot.setText(isCur ? "●" : "○");
+            dot.setTextSize(18);
+            dot.setTextColor(0xFF4CAF50);
+            row.addView(dot);
+
+            TextView name = new TextView(this);
+            name.setText(o.count + " 色" + (o.recommended ? "（推荐）" : ""));
+            name.setTextSize(16);
+            name.setPadding(dp(12), 0, 0, 0);
+            LinearLayout.LayoutParams np = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+            name.setLayoutParams(np);
+            row.addView(name);
+
+            final BeadBrands.CountOption fo = o;
+            row.setOnClickListener(v -> {
+                applyBrand(brand, fo);
+                d.dismiss();
+            });
+            root.addView(row);
         }
 
         Button ok = new Button(this);

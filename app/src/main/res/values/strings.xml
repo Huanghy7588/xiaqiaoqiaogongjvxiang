@@ -276,6 +276,7 @@
     <string name="bead_save_fail">保存失败，请检查存储空间</string>
     <string name="bead_no_viewer">没有可打开该文件的应用</string>
     <string name="bead_pick_brand">选择拼豆品牌</string>
+    <string name="bead_pick_count">选择颜色数量</string>
     <string name="bead_export_title">导出图纸</string>
     <string name="bead_export_png">导出 PNG</string>
     <string name="bead_export_pdf">导出 PDF</string>

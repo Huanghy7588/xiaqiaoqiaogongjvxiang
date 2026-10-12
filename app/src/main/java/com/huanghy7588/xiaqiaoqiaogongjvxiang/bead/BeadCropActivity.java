@@ -16,7 +16,7 @@ import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.pintu.PintuUtils;
 
 /**
- * 拼豆图纸生成 · 第二步：裁剪（可选）。默认 1:1，支持自由 / 1:1 / 4:3。
+ * 拼豆图纸生成 · 第二步：裁剪（可选）。默认「自由」（图片原比例），支持自由 / 1:1 / 4:3。
  */
 public class BeadCropActivity extends AppCompatActivity {
 
@@ -49,8 +49,9 @@ public class BeadCropActivity extends AppCompatActivity {
 
         cropView = findViewById(R.id.crop_view);
         cropView.setSourceBitmap(bmp);
-        cropView.setFrameAspect(1f);
-        syncRatioButtons(R.id.btn_ratio_1);
+        // 默认「自由」= 图片原本比例，不强制 1:1
+        cropView.setFrameAspect(0f);
+        syncRatioButtons(R.id.btn_ratio_free);
 
         bindRatio(R.id.btn_ratio_free, 0f);
         bindRatio(R.id.btn_ratio_1, 1f);

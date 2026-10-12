@@ -16,7 +16,7 @@ public class BeadConfig implements Serializable {
 
     public int gridWidth = 50;
     public int gridHeight = 50;
-    public int maxColors = 32;
+    public int maxColors = 24;
 
     public boolean dither = false;
     public boolean removeBackground = false;

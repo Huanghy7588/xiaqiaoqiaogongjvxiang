@@ -56,8 +56,10 @@ public class BeadCropView extends View {
         gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
             @Override
             public boolean onScroll(MotionEvent e1, MotionEvent e2, float dx, float dy) {
-                tx += dx;
-                ty += dy;
+                // 注意：GestureDetector 的 distanceX/Y = 上一焦点 - 当前焦点。
+                // 手指向右/下移动时 distanceX/Y 为负，因此取反，使图片跟随手指自然平移。
+                tx -= dx;
+                ty -= dy;
                 clamp();
                 invalidate();
                 return true;
