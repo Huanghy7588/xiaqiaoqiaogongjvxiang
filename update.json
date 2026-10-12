@@ -5,10 +5,10 @@
     "enabled": false
   },
   "update": {
-    "versionCode": 47,
-    "versionName": "1.4.5",
-    "updateLog": "修复「打开预设」弹窗里多出的一行提示文字（恢复原来样式），长按删除预设功能保留",
-    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.5/app-release.apk",
+    "versionCode": 48,
+    "versionName": "1.4.6",
+    "updateLog": "新增「拼豆图纸生成」：导入图片→裁剪→选品牌与颜色数→一键生成带色号标注的拼豆图纸，支持导出 PNG / PDF（内置 MARD、COCO、漫漫家、盼盼家、咪小窝、优肯 共 9 套国产拼豆色板）",
+    "downloadUrl": "https://cdn.jsdelivr.net/gh/Huanghy7588/xiaqiaoqiaogongjvxiang@v1.4.6/app-release.apk",
     "forceUpdate": false
   }
 }

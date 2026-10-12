@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.R;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.cardgen.CardGeneratorActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.pintu.PintuActivity;
+import com.huanghy7588.xiaqiaoqiaogongjvxiang.bead.BeadPickActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.qr.QrToolActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.tiemo.TiemoEditorActivity;
 import com.huanghy7588.xiaqiaoqiaogongjvxiang.watermark.WatermarkToolActivity;
@@ -69,6 +70,13 @@ public class HomeFragment extends Fragment {
         View pintuCard = root.findViewById(R.id.card_pintu);
         pintuCard.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), PintuActivity.class);
+            startActivity(intent);
+        });
+
+        // 点击拼豆图纸生成卡片
+        View beadCard = root.findViewById(R.id.card_bead);
+        beadCard.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), BeadPickActivity.class);
             startActivity(intent);
         });
 

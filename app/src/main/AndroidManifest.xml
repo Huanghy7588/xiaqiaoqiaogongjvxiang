@@ -18,6 +18,9 @@
     <!-- 读取媒体图片（Android 13+ 用 READ_MEDIA_IMAGES） -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
+    <!-- 拍照所需相机权限 -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
     <application
         android:name=".App"
         android:allowBackup="true"
@@ -133,6 +136,28 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.XiaQiaoQiao.Preview" />
+
+        <!-- 拼豆图纸生成 -->
+        <activity
+            android:name=".bead.BeadPickActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+        <activity
+            android:name=".bead.BeadCropActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+        <activity
+            android:name=".bead.BeadConfigActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
+        <activity
+            android:name=".bead.BeadPreviewActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.XiaQiaoQiao" />
 
         <!-- FileProvider：用于 Android 7.0+ 安全共享 APK 文件给系统安装器 -->
         <provider

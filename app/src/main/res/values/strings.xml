@@ -245,4 +245,55 @@
     <string name="cardgen_crop_title">裁剪头像</string>
     <string name="cardgen_crop_confirm">确定</string>
     <string name="cardgen_crop_hint">拖动并缩放图片，选择要作为头像的部分</string>
+
+    <!-- 拼豆图纸生成 -->
+    <string name="bead_title">拼豆图纸生成</string>
+    <string name="bead_crop_title">裁剪</string>
+    <string name="bead_config_title">配置图纸</string>
+    <string name="bead_preview_title">预览</string>
+    <string name="bead_from_album">从相册选择</string>
+    <string name="bead_from_camera">拍照</string>
+    <string name="bead_support_formats">支持 JPG / PNG / WEBP</string>
+    <string name="bead_ratio_free">自由</string>
+    <string name="bead_ratio_1">1:1</string>
+    <string name="bead_ratio_43">4:3</string>
+    <string name="bead_skip_crop">跳过裁剪</string>
+    <string name="bead_next">下一步</string>
+    <string name="bead_config_tip">已导入图片</string>
+    <string name="bead_config_tip2">调整品牌、尺寸与用色后生成</string>
+    <string name="bead_brand">拼豆品牌</string>
+    <string name="bead_color_count">颜色数量</string>
+    <string name="bead_grid_width">图纸宽度</string>
+    <string name="bead_max_colors">最大颜色数</string>
+    <string name="bead_dither">抖动处理</string>
+    <string name="bead_remove_bg">去背景</string>
+    <string name="bead_generate">生成预览</string>
+    <string name="bead_need_image">请先选择一张图片</string>
+    <string name="bead_pick_fail">图片读取失败，换一张试试</string>
+    <string name="bead_palette_fail">色板数据异常，请重启 App</string>
+    <string name="bead_generate_fail">生成失败，请重试</string>
+    <string name="bead_generate_first">请先生成图纸</string>
+    <string name="bead_save_fail">保存失败，请检查存储空间</string>
+    <string name="bead_no_viewer">没有可打开该文件的应用</string>
+    <string name="bead_pick_brand">选择拼豆品牌</string>
+    <string name="bead_export_title">导出图纸</string>
+    <string name="bead_export_png">导出 PNG</string>
+    <string name="bead_export_pdf">导出 PDF</string>
+    <string name="bead_opt_codes">显示色号</string>
+    <string name="bead_opt_grid">显示网格线</string>
+    <string name="bead_opt_bold">每 5 格加粗</string>
+    <string name="bead_opt_paginate">按拼豆板分页（仅 PDF）</string>
+    <string name="bead_paper">纸张</string>
+    <string name="bead_exporting">正在导出…</string>
+    <string name="bead_export_success">导出成功</string>
+    <string name="bead_saved_location">位置：Downloads</string>
+    <string name="bead_open">打开</string>
+    <string name="bead_share">分享</string>
+    <string name="bead_finish">完成</string>
+    <string name="tool_bead">拼豆图纸生成</string>
+    <string name="tool_bead_desc">导入图片，生成带色号的拼豆图纸</string>
+
+    <string-array name="bead_paper_sizes">
+        <item>A4</item>
+    </string-array>
 </resources>
